@@ -14,7 +14,7 @@
 - ``<id>.revisions.parquet``   列: date / old_value / new_value / detected_at
 
 国をまたぐ系列（パネル）は ``keys=("country", "date")`` で扱い、どのファイルにも ``country`` 列が付く。
-- ``<id>.parquet.provenance.json``  取得ごとの出所・パラメータ・件数・検証結果
+- ``<id>.parquet.provenance.json``  取得ごとの出所・パラメータ・件数・検証結果（全件残す）
 """
 from __future__ import annotations
 
@@ -29,7 +29,6 @@ import pandas as pd
 
 PROVENANCE_SUFFIX = ".provenance.json"
 REVISIONS_SUFFIX = ".revisions.parquet"
-PROVENANCE_KEEP = 200
 
 
 @dataclass
@@ -150,7 +149,8 @@ def validate_frame(
 def _record_provenance(path: Path, record: dict[str, Any]) -> None:
     pp = provenance_path(path)
     data = json.loads(pp.read_text(encoding="utf-8")) if pp.is_file() else {"store": path.name, "records": []}
-    data["records"] = (data["records"] + [record])[-PROVENANCE_KEEP:]
+    # 取得の証拠なので消さない（raw は保存先で 90 日で消えるため、こちらが長期の記録になる）
+    data["records"] = data["records"] + [record]
     pp.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
 

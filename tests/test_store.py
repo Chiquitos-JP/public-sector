@@ -85,3 +85,11 @@ def test_provenance_is_recorded(path):
 
     rec = json.loads(store.provenance_path(path).read_text())["records"][-1]
     assert rec["source"] == "fred" and rec["params"]["fetch_start"] == "2026-01-01"
+
+
+def test_provenance_keeps_every_record(path):
+    for i in range(250):
+        store.update(path, frame(["2026-01-01"], [1.0]), start="2026-01-01", source="t")
+    import json
+
+    assert len(json.loads(store.provenance_path(path).read_text())["records"]) == 250
