@@ -46,3 +46,26 @@ def fetch(series: Series, start: str) -> tuple[pd.DataFrame, dict]:
     resp = get(CSV_URL, {"id": series.code, "cosd": start})
     save_raw("fred", series.code, resp.text, "csv")
     return parse_csv(resp.text), {"route": "csv", "series_id": series.code}
+
+
+SEARCH_URL = "https://api.stlouisfed.org/fred/series/search"
+
+
+def search(text: str, limit: int = 50) -> pd.DataFrame:
+    """FRED の系列を探す（``FRED_API_KEY`` が要る）。著作権つきの系列も混ざるので、使う前に notes を確かめる。"""
+    key = os.environ.get("FRED_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("FRED の検索には FRED_API_KEY が要る（https://fred.stlouisfed.org/docs/api/api_key.html で無料で取れる）")
+    resp = get(SEARCH_URL, {"search_text": text, "api_key": key, "file_type": "json", "limit": limit, "order_by": "popularity"})
+    rows = resp.json().get("seriess", [])
+    return pd.DataFrame(
+        {
+            "code": [r["id"] for r in rows],
+            "name": [r.get("title", "") for r in rows],
+            "unit": [r.get("units", "") for r in rows],
+            "freq": [r.get("frequency_short", "") for r in rows],
+            "seasonal_adjustment": [r.get("seasonal_adjustment_short", "") for r in rows],
+            "last_updated": [r.get("last_updated", "") for r in rows],
+            "source_note": [r.get("notes", "") for r in rows],
+        }
+    )

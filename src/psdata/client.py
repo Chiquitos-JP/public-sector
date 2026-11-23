@@ -10,6 +10,9 @@
     client.groups()                                               # 名前付きの国の組み合わせ
     print(client.describe("wb.FP.CPI.TOTL.ZG"))                   # 何を測っているか・前提・出典・特徴
     client.read("fred.M2SL", as_of="2026-12-01")                  # その時点で知り得た値（改定前の値）
+    client.search("school enrollment")                            # 取得元の指標を探す（世界銀行。FRED は API キーがあれば）
+    client.pull("wb.SE.PRM.ENRR")                                 # カタログに無い系列をその場で取る（手元にだけ置く）
+    print(client.draft("wb.SE.PRM.ENRR"))                         # 常備に上げるときのカタログの下書き
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数
 
@@ -23,6 +26,7 @@ import pandas as pd
 
 from psdata import catalog as _catalog
 from psdata import vintages as _vintages
+from psdata.ondemand import draft, pull, pulled, search  # noqa: F401  必要なときに引き出す入口
 from psdata.paths import silver_dir
 
 

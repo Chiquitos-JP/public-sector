@@ -56,6 +56,16 @@ data/                      git に入れない
 3. 新しい配信元は `src/psdata/sources/<配信元>.py` に `fetch(series, start)` を書き、`FETCHERS` に登録する
 4. `scripts/validate.py` と `pytest` を通す
 
+## 必要なときに引き出す
+
+- `client.search("...")` — 取得元の指標を探す（世界銀行 WDI の全指標。FRED は `FRED_API_KEY` があれば）。`in_catalog` は常備済みか
+- `client.pull("wb.SE.PRM.ENRR")` — カタログに無い系列をその場で取る。**手元の `data/ondemand/` にだけ置き、保存先には書かない**。20 時間以内に取ったものは手元から返す
+- `client.pulled()` — 取り置いた系列の一覧（取った回数・期間）。常備に上げる候補を見る
+- `client.draft("wb.SE.PRM.ENRR", "u04")` — 常備に上げるときのカタログの下書き（`definition` と `notes` は書き直す）
+
+取り置きの段階では収録基準を確かめていない（FRED には再配布できない系列が混ざる）。
+**常備に上げる基準**: 2 回以上の作業で使う・CI や別のプロジェクトから読む・改定を追いたい、のどれかに当たり、収録基準を満たすもの。上げたら下の「系列の追加」に従う。
+
 ## 実行（Mac は `.venv-mac/` と `python3`、Windows は `.venv/` と `py`）
 
 ```bash

@@ -20,7 +20,10 @@ OBSERVATION_COLUMNS = ["series_id", "country", "date", "value", "fetched_at"]
 
 def last_fetched(series: Series) -> pd.Timestamp | None:
     """最後に取得を試みて書き込んだ時刻（provenance の最終記録）。"""
-    pp = store.provenance_path(bronze_path(series.id))
+    return last_fetched_at(store.provenance_path(bronze_path(series.id)))
+
+
+def last_fetched_at(pp) -> pd.Timestamp | None:
     if not pp.is_file():
         return None
     records = json.loads(pp.read_text(encoding="utf-8")).get("records") or []

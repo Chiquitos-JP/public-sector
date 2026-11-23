@@ -80,3 +80,18 @@ def parse_countries(rows: list[dict]) -> pd.DataFrame:
 def fetch_countries() -> pd.DataFrame:
     """国・地域の一覧（ISO3・名称・地域・所得水準・集計値かどうか）。"""
     return parse_countries(_pages(f"{API_URL}/country", {}, "_countries"))
+
+
+def fetch_indicator_list() -> pd.DataFrame:
+    """WDI の全指標（約 1,500）の一覧。id / name / unit / source_note / source_org / topics。"""
+    rows = _pages(f"{API_URL}/indicator", {"source": WDI_SOURCE}, "_indicators")
+    return pd.DataFrame(
+        {
+            "code": [r["id"] for r in rows],
+            "name": [(r.get("name") or "").strip() for r in rows],
+            "unit": [(r.get("unit") or "").strip() for r in rows],
+            "source_note": [(r.get("sourceNote") or "").strip() for r in rows],
+            "source_org": [(r.get("sourceOrganization") or "").strip() for r in rows],
+            "topics": [", ".join(t.get("value", "").strip() for t in (r.get("topics") or []) if t.get("value")) for r in rows],
+        }
+    )

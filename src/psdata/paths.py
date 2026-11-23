@@ -27,5 +27,15 @@ def reference_path(source: str, name: str) -> Path:
     return data_dir() / "bronze" / source / f"_{name}.parquet"
 
 
+def ondemand_dir() -> Path:
+    """カタログ外の系列をその場で取ったものの置き場（手元だけ。保存先には書かない）。"""
+    return data_dir() / "ondemand"
+
+
+def cache_dir() -> Path:
+    """取得元の指標一覧など、取り直せる参照情報のキャッシュ（手元だけ）。"""
+    return data_dir() / "cache"
+
+
 def silver_dir() -> Path:
     return data_dir() / "silver"
