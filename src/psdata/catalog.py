@@ -63,6 +63,9 @@ class Series:
     original_source: str = ""
     #: 取得の間隔（例: 7D）。空なら毎回取る。更新の少ない年次統計で CI の時間を節約する
     fetch_every: str = ""
+    #: 同じものを測る系列の束（catalog/concepts.yml のキー）と、その中での範囲・作り方の違い
+    concept: str = ""
+    coverage: str = ""
     #: 見通し（未来の期間）を何年先まで含むか。0 なら未来の日付は検証で止める
     projection_years: int = 0
 
@@ -137,9 +140,16 @@ def validate_groups(groups: dict[str, dict], known: set[str] | None = None) -> l
     return errors
 
 
-def validate(series: list[Series], sources: dict) -> list[str]:
+def load_concepts(catalog_dir: Path = CATALOG_DIR) -> dict[str, dict]:
+    """概念（同じものを測る系列の束）。catalog/concepts.yml。"""
+    f = catalog_dir / "concepts.yml"
+    return (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
+
+
+def validate(series: list[Series], sources: dict, concepts: dict | None = None) -> list[str]:
     """収録基準と定義の整合を確かめ、違反を文字列で返す（空なら合格）。"""
     errors: list[str] = []
+    concepts = load_concepts() if concepts is None else concepts
     creators = sources.get("creators", {})
     distributors = sources.get("distributors", {})
     licenses = sources.get("allowed_licenses", {})
@@ -174,6 +184,14 @@ def validate(series: list[Series], sources: dict) -> list[str]:
             errors.append(f"{pre} projection_years は 0〜10 の整数")
         if s.price_basis not in PRICE_BASES:
             errors.append(f"{pre} price_basis は nominal / real / 空")
+        if s.concept:
+            c = concepts.get(s.concept)
+            if c is None:
+                errors.append(f"{pre} concept {s.concept!r} が catalog/concepts.yml に無い")
+            elif c.get("unit_kind") and c["unit_kind"] != s.unit_kind:
+                errors.append(f"{pre} concept {s.concept} の unit_kind は {c['unit_kind']}（系列は {s.unit_kind}）")
+            if not s.coverage:
+                errors.append(f"{pre} concept を書いたら coverage（範囲・作り方の違い）も書く")
         if not s.definition.strip():
             errors.append(f"{pre} definition が空（何を測っているかを書く）")
         if not s.source_url.startswith("https://"):
@@ -223,6 +241,8 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "source_url": s.source_url,
                 "tier": s.tier,
                 "projection_years": s.projection_years,
+                "concept": s.concept,
+                "coverage": s.coverage,
             }
         )
     return pd.DataFrame(rows)

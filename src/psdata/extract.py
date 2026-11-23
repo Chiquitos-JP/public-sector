@@ -138,10 +138,14 @@ def tidy(
     ).reindex(df.index)
     names = countries.set_index("country")["name"] if countries is not None else pd.Series(dtype="string")
     df["country_name"] = df["country"].map(names).astype("string").fillna("")
+    if countries is not None and "name_ja" in countries.columns:
+        df["country_name_ja"] = df["country"].map(countries.set_index("country")["name_ja"]).astype("string").fillna(df["country_name"])
+    else:
+        df["country_name_ja"] = df["country_name"]
     if dropna:
         # 計算できなかった行（前の期間が無い）だけを落とす。元の値の欠けは元々行が無い
         df = df[df["value"].notna() | (df["measure"] == "value")]
-    cols = ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit",
+    cols = ["series_id", "title_ja", "country", "country_name", "country_name_ja", "date", "period", "measure", "value", "unit",
             "unit_kind", "currency", "scale"]
     return df[cols].sort_values(["series_id", "measure", "country", "date"]).reset_index(drop=True)
 
@@ -207,7 +211,8 @@ def card(df: pd.DataFrame, cat: pd.DataFrame, prof: pd.DataFrame | None, query: 
             "series_id": "系列 id（<配信元>.<元のコード>）",
             "title_ja": "系列名",
             "country": "国・地域（ISO3。世界銀行の集計値を含む）",
-            "country_name": "国・地域の名前（世界銀行の表記）",
+            "country_name": "国・地域の名前（英語）",
+            "country_name_ja": "国・地域の名前（日本語）",
             "date": "期間の開始日",
             "period": "期間の表記（年・四半期・月・日）",
             "measure": "値の種類（下の measures）",

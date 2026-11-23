@@ -16,6 +16,8 @@
     df = client.extract(["wb.NY.GDP.MKTP.KD.ZG"], countries="g7", measures=["value"])  # 目的に合わせた tidy な表
     client.export(df, "out/macro.xlsx")                           # データカード（出典・定義・前提）付きで書き出す
     client.sql("select * from obs where series_id = 'fred.UNRATE'")  # SQL で読む（DuckDB。ビューは psdata.db）
+    client.concepts()                                             # 同じものを測る系列の束（取得元をまたぐ）
+    client.compare("gov_debt_gdp", countries="g7", start="2015-01-01")  # 取得元を並べて比べる
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数
 
@@ -289,3 +291,95 @@ def contract(table: str | None = None) -> dict:
 
     c = _contracts.load()
     return c if table is None else c["tables"][table]
+
+
+def concepts() -> pd.DataFrame:
+    """概念（同じものを測る系列の束）ごとに、どの取得元のどの系列があり、並べたときに何が違うか。"""
+    from psdata import catalog as _cat
+
+    cat = catalog()
+    rows = []
+    for key, c in _cat.load_concepts().items():
+        members = cat[cat["concept"] == key]
+        rows.append({
+            "concept": key,
+            "title_ja": c.get("title_ja", ""),
+            "series": ", ".join(members["series_id"]),
+            "coverages": ", ".join(f"{r.series_id}={r.coverage}" for r in members.itertuples()),
+            "compare_notes": "\n".join(c.get("compare_notes") or []),
+        })
+    return pd.DataFrame(rows)
+
+
+def compare(
+    concept: str,
+    *,
+    countries: str | list[str] | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    as_of: str | pd.Timestamp | None = None,
+    to_freq: str | None = None,
+) -> pd.DataFrame:
+    """同じ概念の系列を、取得元をまたいで同じ形に並べる（tidy）。
+
+    国コード・単位の倍率（base_units）・期間の表記をそろえ、``source`` / ``coverage`` の列で違いを示す。
+    頻度が混ざるときは ``to_freq``（既定は一番粗い頻度。年なら年平均）にそろえる。並べたときの注意は
+    ``client.concepts()`` の compare_notes とデータカードに入る。横に並べるなら ``to_wide(df, columns="series_id")``。
+    """
+    from psdata import catalog as _cat
+    from psdata import extract as _extract
+
+    cat = catalog()
+    members = cat[cat["concept"] == concept]
+    if members.empty:
+        raise KeyError(f"概念 {concept!r} の系列が無い（client.concepts() を参照）")
+    ids = members["series_id"].tolist()
+    df = extract(ids, countries=countries, start=start, end=end, as_of=as_of, base_units=True)
+    order = ["D", "W", "M", "Q", "A"]
+    freq_of = members.set_index("series_id")["freq"]
+    target = to_freq or max(freq_of, key=order.index)
+    rule = {"A": "YS", "Q": "QS", "M": "MS", "W": "W-MON", "D": "D"}[target]
+    coarse, gaps = [], []
+    expected = {("M", "A"): 12, ("Q", "A"): 4, ("M", "Q"): 3}
+    for sid, g in df.groupby("series_id", sort=False):
+        if freq_of[sid] == target:
+            coarse.append(g)
+            continue
+        # 細かい頻度の系列は平均して粗い頻度にそろえる（年なら年平均）。
+        # 終わっていない期間（最後の観測が期間の終わりより前）は平均しない。欠けがある期間は残して注意に書く
+        r = g.set_index("date").groupby(["country"])["value"].resample(rule)
+        agg = pd.concat([r.mean().rename("value"), r.count().rename("n"), r.apply(lambda x: x.index.max()).rename("last")], axis=1)
+        agg = agg.dropna(subset=["value"]).reset_index()
+        period_end = agg["date"] + pd.tseries.frequencies.to_offset(rule) - pd.Timedelta(days=1)
+        finished = agg["last"] >= period_end - pd.Timedelta(days=7 if freq_of[sid] in "DW" else 0)
+        if freq_of[sid] in "MQ":
+            finished = agg["last"] >= period_end.dt.to_period("M").dt.to_timestamp()
+        agg = agg[finished]
+        need = expected.get((freq_of[sid], target))
+        if need:
+            short = agg[agg["n"] < need]
+            gaps += [f"{sid} {r.country} {_extract._period_label(pd.Series([r.date]), target).iloc[0]} は {int(r.n)}/{need} 期間の平均" for r in short.itertuples()]
+        agg = agg.drop(columns=["n", "last"])
+        first = g.iloc[0]
+        agg = agg.assign(**{c: first[c] for c in ["series_id", "title_ja", "measure", "unit", "unit_kind", "currency", "scale"]})
+        agg["country_name"] = agg["country"].map(g.drop_duplicates("country").set_index("country")["country_name"])
+        agg["country_name_ja"] = agg["country"].map(g.drop_duplicates("country").set_index("country")["country_name_ja"])
+        agg["period"] = _extract._period_label(agg["date"], target)
+        coarse.append(agg[g.columns])
+    df = pd.concat(coarse, ignore_index=True)
+    meta = members.set_index("series_id")
+    df.insert(0, "concept", concept)
+    df.insert(2, "source", df["series_id"].map(meta["distributor"]))
+    df.insert(3, "coverage", df["series_id"].map(meta["coverage"]))
+    c = _cat.load_concepts()[concept]
+    notes = list(c.get("compare_notes") or [])
+    if any(freq_of[s] != target for s in ids):
+        notes.append(f"頻度をそろえた: {', '.join(s for s in ids if freq_of[s] != target)} を {target} の平均にした（終わっていない期間は除く）")
+    notes += gaps
+    df = df.sort_values(["country", "date", "series_id"]).reset_index(drop=True)
+    df.attrs["query"] = {
+        "series": ids, "concept": concept, "countries": countries, "start": start, "end": end,
+        "as_of": None if as_of is None else str(as_of), "measures": ["value"], "base_units": True,
+        "to_freq": target, "warnings": notes,
+    }
+    return df

@@ -5,7 +5,7 @@
 #
 # type: string / date（期間の開始日。時刻なし）/ timestamp_utc / float / int / bool
 
-schema_version: 3
+schema_version: 4
 
 tables:
   observations:
@@ -65,6 +65,8 @@ tables:
       source_url: {type: string, meaning: "定義を確かめられる公式のページ"}
       tier: {type: string, meaning: "常備か取り置きか", values: [stocked, on_demand]}
       projection_years: {type: int, meaning: "見通し（未来の期間）を何年先まで含むか。0 なら実績だけ"}
+      concept: {type: string, meaning: "同じものを測る系列の束（catalog/concepts.yml）。空なら対応なし"}
+      coverage: {type: string, meaning: "束の中での範囲・作り方の違い（central_government / general_government など）"}
 
   profile:
     grain: 1 系列（実データから毎回作る観察）
@@ -106,7 +108,8 @@ tables:
     primary_key: [country]
     columns:
       country: {type: string, meaning: "ISO3（世界銀行の集計値のコードを含む）"}
-      name: {type: string, meaning: "名前（世界銀行の表記）"}
+      name: {type: string, meaning: "名前（英語。世界銀行、無ければ IMF の表記）"}
+      name_ja: {type: string, meaning: "名前（日本語。ISO 3166 の日本語名を短く通りのよい呼び方に直したもの。分からなければ英語）"}
       region: {type: string, meaning: "地域のコード（集計値は空）"}
       region_name: {type: string, meaning: "地域の名前"}
       income: {type: string, meaning: "所得区分のコード"}

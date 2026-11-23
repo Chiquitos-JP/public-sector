@@ -5,6 +5,8 @@
 - id: wb.NY.GDP.MKTP.KD.ZG
   title_ja: 実質 GDP 成長率
   title_en: "GDP growth (annual %)"
+  concept: real_gdp_growth
+  coverage: actual
   definition: "実質 GDP の前年比の伸び率。物価の変動を除いた（2015 年基準の米ドル建て不変価格）経済規模の成長率"
   notes:
     - "各国の統計機関・中央銀行の国民経済計算がもとで、国によって基準年の改定や推計方法が違う"
@@ -29,6 +31,8 @@
 - id: wb.NY.GDP.PCAP.CD
   title_ja: 1 人当たり GDP（名目・米ドル）
   title_en: "GDP per capita (current US$)"
+  concept: gdp_per_capita_usd
+  coverage: actual
   definition: "1 人当たり GDP（名目・米ドル建て）。名目 GDP を年央の人口で割った値"
   notes:
     - "物価も為替も調整していない。自国通貨が対ドルで下がると、経済が変わらなくても値が下がる"
@@ -55,6 +59,8 @@
 - id: wb.NY.GDP.MKTP.CD
   title_ja: 名目 GDP（米ドル）
   title_en: "GDP (current US$)"
+  concept: gdp_usd
+  coverage: actual
   definition: "名目 GDP（米ドル建て）。各国通貨の GDP をその年の為替相場で米ドルに換算した値"
   notes:
     - "物価も為替も調整していない。年ごとの増減には為替の動きが大きく入る"
@@ -80,6 +86,8 @@
 - id: wb.FP.CPI.TOTL.ZG
   title_ja: 消費者物価上昇率
   title_en: "Inflation, consumer prices (annual %)"
+  concept: inflation_avg
+  coverage: actual
   definition: "消費者物価の前年比の上昇率（年平均）"
   notes:
     - "原典は IMF の International Financial Statistics。品目のかごや基準年は国ごとに違う"
@@ -105,6 +113,8 @@
 - id: wb.GC.NLD.TOTL.GD.ZS
   title_ja: 財政収支（純貸出・純借入、GDP 比）
   title_en: "Net lending (+) / net borrowing (-) (% of GDP)"
+  concept: gov_balance_gdp
+  coverage: central_government
   definition: "政府の財政収支（純貸出 / 純借入）の GDP 比。歳入 − 歳出 − 非金融資産への純投資。プラスが黒字、マイナスが赤字"
   notes:
     - "原典は IMF の Government Finance Statistics。対象は主に中央政府で、国によって地方政府を含むかが違う（一般政府の比較なら IMF WEO のほうがそろっている）"
@@ -156,6 +166,8 @@
 - id: wb.GC.DOD.TOTL.GD.ZS
   title_ja: 中央政府債務（GDP 比）
   title_en: "Central government debt, total (% of GDP)"
+  concept: gov_debt_gdp
+  coverage: central_government
   definition: "中央政府の債務残高の GDP 比（総額。国内・対外の両方）"
   notes:
     - "原典は IMF の Government Finance Statistics。中央政府だけで、地方政府や公的企業の債務は含まない"
@@ -182,6 +194,8 @@
 - id: wb.BN.CAB.XOKA.GD.ZS
   title_ja: 経常収支（GDP 比）
   title_en: "Current account balance (% of GDP)"
+  concept: current_account_gdp
+  coverage: actual
   definition: "経常収支の GDP 比。財・サービスの貿易、所得の受け払い、送金などの移転の合計。プラスが黒字"
   notes:
     - "原典は IMF の国際収支統計（BPM6）"
@@ -307,6 +321,8 @@
 - id: wb.SL.UEM.TOTL.ZS
   title_ja: 失業率（ILO 推計）
   title_en: "Unemployment, total (% of total labor force) (modeled ILO estimate)"
+  concept: unemployment_rate
+  coverage: ilo_modelled
   definition: "失業率（労働力人口に占める失業者の割合）。ILO が各国の統計をそろえて推計した値"
   notes:
     - "ILO のモデル推計なので、各国の公式の失業率とは一致しないことがある（調査の無い年も推計で埋まっている）"

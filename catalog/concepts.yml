@@ -1,0 +1,61 @@
+# 概念（同じものを測る系列の束）。取得元が違っても、ここで対応づけて client.compare で並べる。
+# 系列は catalog/series/*.yml の concept にここのキーを、coverage に範囲や作り方の違いを書く。
+# compare_notes は「並べたときに差が出る理由」。差を見て取得の誤りと取り違えないために書く。
+
+real_gdp_growth:
+  title_ja: 実質 GDP 成長率
+  unit_kind: percent
+  compare_notes:
+    - 世界銀行（WDI）は各国の公式統計の実績、IMF（WEO）は年 2 回の公表時点の推計・見通しを含む。直近の年ほど差が出やすい
+
+inflation_avg:
+  title_ja: 消費者物価上昇率（年平均）
+  unit_kind: percent
+  compare_notes:
+    - 世界銀行の値の原典は IMF の International Financial Statistics。WEO とは公表の時点と改定の反映がずれる
+
+inflation_eop:
+  title_ja: 消費者物価上昇率（年末）
+  unit_kind: percent
+  compare_notes: []
+
+unemployment_rate:
+  title_ja: 失業率
+  unit_kind: percent
+  compare_notes:
+    - 世界銀行は ILO のモデル推計（国どうしでそろえた定義）、IMF と FRED は各国の公式統計の定義。同じ国でも数字が違う
+    - FRED の米国失業率は月次・季節調整済み。年の比較では年平均をとって並べる
+
+gov_balance_gdp:
+  title_ja: 財政収支（GDP 比）
+  unit_kind: percent
+  compare_notes:
+    - 世界銀行は主に中央政府、IMF は一般政府（中央・地方・社会保障基金）。範囲が違うので水準が違ってよい
+
+gov_debt_gdp:
+  title_ja: 政府債務残高（GDP 比）
+  unit_kind: percent
+  compare_notes:
+    - 世界銀行は中央政府、IMF は一般政府の総債務。範囲が違うので水準が違ってよい
+
+current_account_gdp:
+  title_ja: 経常収支（GDP 比）
+  unit_kind: percent
+  compare_notes: []
+
+gdp_usd:
+  title_ja: 名目 GDP（米ドル）
+  unit_kind: currency
+  compare_notes:
+    - 単位の倍率が違う（世界銀行はドル、IMF は十億ドル）。client.compare はそろえて並べる
+
+gdp_per_capita_usd:
+  title_ja: 1 人当たり名目 GDP（米ドル）
+  unit_kind: currency
+  compare_notes: []
+
+usd_jpy:
+  title_ja: ドル円の為替相場
+  unit_kind: fx
+  compare_notes:
+    - 日銀は東京 17 時、FRED は NY 正午の相場。同じ日でも時点が違う。FRED は週 1 回まとめて公表で数日遅れる

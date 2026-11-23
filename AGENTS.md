@@ -55,7 +55,7 @@ data/                      git に入れない
 ## 系列の追加
 
 1. 作成元が `catalog/sources.yml` に無ければ追加する
-2. `catalog/series/<配信元>.yml` に定義を書く。単位は表示用の `unit` とは別に、機械が読む `unit_kind`（percent / index / currency / fx / count）・`unit_of`（% なら何に対する比、指数なら基準、為替なら通貨の組）・`currency`（ISO 4217）・`scale`（10 の何乗か。十億 = 9）・`price_basis`（nominal / real）を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
+2. `catalog/series/<配信元>.yml` に定義を書く。ほかの取得元に同じものを測る系列があれば `concept` と `coverage` を書く（`catalog/concepts.yml`）。単位は表示用の `unit` とは別に、機械が読む `unit_kind`（percent / index / currency / fx / count）・`unit_of`（% なら何に対する比、指数なら基準、為替なら通貨の組）・`currency`（ISO 4217）・`scale`（10 の何乗か。十億 = 9）・`price_basis`（nominal / real）を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
 3. 新しい配信元は `src/psdata/sources/<配信元>.py` に `fetch(series, start)` を書き、`FETCHERS` に登録する
    見通し（未来の期間）を含む系列は `projection_years` を書く（書かなければ未来の日付は検証で止まる）
 4. `scripts/validate.py` と `pytest` を通す
@@ -82,6 +82,18 @@ con = client.db()                        # duckdb の接続
 - 保存の形は Parquet のまま。DuckDB はビューを被せるだけで、何も書かない
 - ビュー: `obs`（単一の系列とパネルを合わせた観測値）/ `observations` / `panel` / `series` / `profile` / `vintages` / `countries` / `groups`、表関数 `as_of(t)`（定義は `src/psdata/db.py`）
 - `source="r2"` は読み取り専用の鍵を使う: 環境変数 `PSDATA_R2_KEY_ID` / `PSDATA_R2_SECRET` / `PSDATA_R2_ENDPOINT`、無ければ rclone の remote `r2ps`。鍵はメモリの中だけで使う。初回は DuckDB が httpfs 拡張を取ってくる
+
+## 取得元をまたいで比べる
+
+```python
+client.concepts()                                                    # 同じものを測る系列の束
+client.compare("gov_debt_gdp", countries="g7", start="2015-01-01")   # 世界銀行と IMF を同じ形で並べる
+```
+
+- **国コード**は ISO 3166-1 alpha-3 にそろえる（ISO に無いものは世界銀行のコード）。取得元ごとの別名は `src/psdata/harmonize.py` の `CODE_ALIASES` で取得時と既存の bronze の両方を寄せる
+- **国名**は `countries` の `name`（英語）と `name_ja`（日本語）。表の `country_name_ja`
+- **概念**は `catalog/concepts.yml`。系列に `concept`（束のキー）と `coverage`（範囲・作り方の違い: central_government / general_government など）を書く。並べたときに差が出る理由は `compare_notes`
+- `compare` は単位の倍率・期間の表記・頻度（細かい方を平均。終わっていない期間は除く）をそろえ、`source` / `coverage` の列で違いを示す
 
 ## 目的に合わせて切り出す（アドホックな利用）
 

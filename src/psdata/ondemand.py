@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from psdata import catalog, pipeline, store
+from psdata import catalog, harmonize, pipeline, store
 from psdata.catalog import Series
 from psdata.paths import cache_dir, ondemand_dir
 from psdata.sources import FETCHERS, _http, fred, wb
@@ -114,6 +114,7 @@ def pull(
     if refresh or last is None or _now() - last > MAX_AGE:
         _http.SAVED.clear()
         fresh, params = FETCHERS[s.distributor](s, start)
+        fresh = harmonize.canonicalize(fresh, s.distributor)
         if fresh.empty:
             raise KeyError(f"{series_id}: 取得元から値が返ってこなかった（コードを確かめる）")
         context = {**pipeline.run_context(), "mode": "on_demand", "raw": list(_http.SAVED)}

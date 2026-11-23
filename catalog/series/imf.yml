@@ -6,6 +6,8 @@
 - id: imf.NGDP_RPCH
   title_ja: 実質 GDP 成長率（IMF WEO）
   title_en: "Real GDP growth"
+  concept: real_gdp_growth
+  coverage: weo_with_projections
   definition: "実質 GDP の前年比の伸び率（各国通貨建ての不変価格）"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -31,6 +33,8 @@
 - id: imf.PCPIPCH
   title_ja: 消費者物価上昇率（年平均・IMF WEO）
   title_en: "Inflation rate, average consumer prices"
+  concept: inflation_avg
+  coverage: weo_with_projections
   definition: "消費者物価指数の年平均の前年比"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -55,6 +59,8 @@
 - id: imf.PCPIEPCH
   title_ja: 消費者物価上昇率（年末・IMF WEO）
   title_en: "Inflation rate, end of period consumer prices"
+  concept: inflation_eop
+  coverage: weo_with_projections
   definition: "消費者物価指数の年末（12 月など期末）の前年同期比"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -80,6 +86,8 @@
 - id: imf.LUR
   title_ja: 失業率（IMF WEO）
   title_en: "Unemployment rate"
+  concept: unemployment_rate
+  coverage: national_definition
   definition: "労働力人口に占める失業者の割合（各国の定義による）"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -106,6 +114,8 @@
 - id: imf.GGXCNL_NGDP
   title_ja: 一般政府の財政収支（GDP 比・IMF WEO）
   title_en: "General government net lending/borrowing"
+  concept: gov_balance_gdp
+  coverage: general_government
   definition: "一般政府（中央・地方・社会保障基金）の純貸出 / 純借入の GDP 比。プラスが黒字"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -132,6 +142,8 @@
 - id: imf.GGXWDG_NGDP
   title_ja: 一般政府の債務残高（GDP 比・IMF WEO）
   title_en: "General government gross debt"
+  concept: gov_debt_gdp
+  coverage: general_government
   definition: "一般政府の債務残高（総額）の GDP 比"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -158,6 +170,8 @@
 - id: imf.BCA_NGDPD
   title_ja: 経常収支（GDP 比・IMF WEO）
   title_en: "Current account balance, percent of GDP"
+  concept: current_account_gdp
+  coverage: weo_with_projections
   definition: "経常収支の GDP 比。プラスが黒字"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -183,6 +197,8 @@
 - id: imf.NGDPD
   title_ja: 名目 GDP（米ドル・IMF WEO）
   title_en: "GDP, current prices (U.S. dollars)"
+  concept: gdp_usd
+  coverage: weo_with_projections
   definition: "名目 GDP を米ドルに換算した値"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
@@ -211,6 +227,8 @@
 - id: imf.NGDPDPC
   title_ja: 1 人当たり名目 GDP（米ドル・IMF WEO）
   title_en: "GDP per capita, current prices (U.S. dollars)"
+  concept: gdp_per_capita_usd
+  coverage: weo_with_projections
   definition: "名目 GDP（米ドル）を人口で割った値"
   notes:
     - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"

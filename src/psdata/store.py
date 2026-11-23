@@ -196,10 +196,12 @@ def update(
     keys: tuple[str, ...] = ("date",),
     context: dict[str, Any] | None = None,
     allow_future_days: int = 1,
+    key_aliases: dict[str, str] | None = None,
 ) -> UpdateResult:
     """``start`` 以降を取り直した ``fresh``（keys / value）でストアを更新する。
 
     ``context`` は取得記録に添える「誰が・どの版で・どの応答から」（``psdata.pipeline.run_context``）。
+    ``key_aliases`` は国コードの別名 → そろえる先（``psdata.harmonize.CODE_ALIASES``）。既存の行のコードも寄せる。
     """
     path = Path(path)
     name = label or path.stem
@@ -237,6 +239,16 @@ def update(
     else:
         if "first_seen_at" not in existing.columns:
             existing = _backfill_first_seen(existing, path, keys)
+        if key_aliases and "country" in existing.columns and existing["country"].isin(list(key_aliases)).any():
+            renamed = existing["country"].isin(list(key_aliases))
+            existing = existing.assign(country=existing["country"].replace(key_aliases))
+            # 寄せた先にすでに行があれば、寄せた先の行を残す（同じ国・同じ期間を 2 行にしない）
+            existing = existing.assign(_renamed=renamed).sort_values("_renamed")
+            dropped = existing.duplicated(list(keys))
+            if dropped.any():
+                rep.warnings.append(f"{name}: 国コードを寄せて重なった {int(dropped.sum())} 行は寄せた先の行を残した")
+            existing = existing[~dropped].drop(columns="_renamed").sort_values(list(keys)).reset_index(drop=True)
+            rep.warnings.append(f"{name}: 国コードの別名を寄せた {sorted(set(key_aliases))}")
         existing = existing.astype({k: "string" for k in keys if k != "date"})
         both = existing.merge(fresh_n, on=list(keys), how="outer", suffixes=("_old", "_new"), indicator=True)
         is_new = both["_merge"] == "right_only"

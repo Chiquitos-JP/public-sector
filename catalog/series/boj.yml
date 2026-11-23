@@ -3,6 +3,8 @@
 - id: boj.FM08.FXERD04
   title_ja: 東京市場 ドル・円 スポット 17 時時点
   title_en: USD/JPY Spot Rate at 17:00 in the Tokyo Market
+  concept: usd_jpy
+  coverage: tokyo_17h
   definition: "東京外国為替市場のドル円スポット相場の 17 時時点。1 ドルあたりの円"
   notes:
     - "東京市場の営業日だけ。土日・祝日・年末年始は行が無い"

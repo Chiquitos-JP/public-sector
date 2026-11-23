@@ -25,6 +25,8 @@
 - id: fred.UNRATE
   title_ja: 米失業率
   title_en: Unemployment Rate
+  concept: unemployment_rate
+  coverage: national_definition_monthly_sa
   definition: "米国の失業率。16 歳以上の民間人の労働力人口に占める失業者の割合（家計調査 CPS による）"
   notes:
     - "季節調整済み。季節調整の係数は毎年 1 月に直近 5 年分が見直されるので、過去の値も変わる（取り直しの窓は 5 年）"
@@ -143,6 +145,8 @@
 - id: fred.DEXJPUS
   title_ja: 円/ドル為替レート（NY 正午）
   title_en: Japanese Yen to U.S. Dollar Spot Exchange Rate
+  concept: usd_jpy
+  coverage: ny_noon
   definition: "ドル円の為替相場。1 ドルあたりの円（ニューヨーク市場の正午の買い相場、FRB H.10）"
   notes:
     - "米国の営業日だけ。公表は週 1 回まとめて（翌週の月曜）なので、最新の値は数日遅れる"

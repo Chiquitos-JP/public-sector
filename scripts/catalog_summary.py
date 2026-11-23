@@ -29,7 +29,7 @@ TABLES = [
     ("countries.parquet", "国・地域の一覧", "country", "世界銀行の地域・所得区分・集計値かどうか"),
 ]
 
-DISTRIBUTOR_JA = {"fred": "FRED（米セントルイス連銀）", "boj": "日本銀行", "wb": "世界銀行"}
+DISTRIBUTOR_JA = {"fred": "FRED（米セントルイス連銀）", "boj": "日本銀行", "wb": "世界銀行", "imf": "IMF（WEO）"}
 
 
 def _date(x) -> str | None:
@@ -62,6 +62,8 @@ def series_rows() -> list[dict]:
             "license": r["license"],
             "credit": r["credit"],
             "fetch": "週 1 回" if s.fetch_every == "7D" else "毎日",
+            "concept": r.get("concept", "") or "",
+            "coverage": r.get("coverage", "") or "",
             "definition": r["definition"],
         })
     return rows

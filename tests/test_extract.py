@@ -35,7 +35,7 @@ def env(tmp_path, monkeypatch):
 
 def test_tidy_columns_and_yoy_skips_missing_base(env):
     df = client.extract("fred.CPIAUCSL", measures=["value", "yoy_pct"])
-    assert list(df.columns) == ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit", "unit_kind", "currency", "scale"]
+    assert list(df.columns) == ["series_id", "title_ja", "country", "country_name", "country_name_ja", "date", "period", "measure", "value", "unit", "unit_kind", "currency", "scale"]
     yoy = df[df["measure"] == "yoy_pct"].set_index("period")["value"]
     assert "2024-12" not in yoy.index  # 1 年前が無い
     assert round(yoy["2025-01"], 6) == round((112 / 100 - 1) * 100, 6)
