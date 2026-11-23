@@ -3,7 +3,7 @@
 公開統計を取得・整形し、非公開の保存先へ置くパイプライン（パッケージ名 `psdata`）。
 
 - このリポジトリは公開されている。**秘密情報・個人のパス・非公開データ・利用先の固有名をコミットしない**
-- 補足の運用メモ（非公開）が `~/dev/knowledge-base/projects/public-sector/psdata-notes.md` にあれば先に読む
+- 補足の運用メモ（非公開）が `~/dev/public-sector-history/psdata-notes.md` にあれば先に読む
 
 ## 収録基準（すべて満たすものだけ）
 
