@@ -17,7 +17,7 @@ def test_first_write_creates_store(path):
     res = store.update(path, frame(["2026-01-01", "2026-02-01"], [1.0, 2.0]), start="2026-01-01", source="t")
     assert res.written and res.rows_added == 2 and res.rows_revised == 0
     df = store.read(path)
-    assert list(df.columns) == ["date", "value", "fetched_at"]
+    assert list(df.columns) == ["date", "value", "fetched_at", "first_seen_at"]
     assert str(df["fetched_at"].dt.tz) == "UTC"
 
 
@@ -93,3 +93,27 @@ def test_provenance_keeps_every_record(path):
     import json
 
     assert len(json.loads(store.provenance_path(path).read_text())["records"]) == 250
+
+
+def test_first_seen_at_is_kept_and_new_rows_get_now(path):
+    store.update(path, frame(["2026-01-01"], [1.0]), start="2026-01-01", source="t")
+    first = store.read(path)["first_seen_at"].iloc[0]
+    store.update(path, frame(["2026-01-01", "2026-02-01"], [1.5, 2.0]), start="2026-01-01", source="t")
+    df = store.read(path).set_index("date")
+    assert df.loc["2026-01-01", "first_seen_at"] == first  # 改定されても初めて取った時刻は変わらない
+    assert df.loc["2026-01-01", "fetched_at"] > first
+    assert df.loc["2026-02-01", "first_seen_at"] > first
+
+
+def test_old_store_without_first_seen_is_backfilled(path):
+    store.update(path, frame(["2026-01-01", "2026-02-01"], [1.0, 2.0]), start="2026-01-01", source="t")
+    store.update(path, frame(["2026-01-01", "2026-02-01"], [1.0, 2.5]), start="2026-01-01", source="t")
+    old = store.read(path).drop(columns="first_seen_at")
+    old.to_parquet(path, index=False)
+    import json
+
+    first_fetch = pd.Timestamp(json.loads(store.provenance_path(path).read_text())["records"][0]["fetched_at"])
+    store.update(path, frame(["2026-01-01", "2026-02-01"], [1.0, 2.5]), start="2026-01-01", source="t")
+    df = store.read(path).set_index("date")
+    assert df.loc["2026-01-01", "first_seen_at"] == df.loc["2026-01-01", "fetched_at"]
+    assert df.loc["2026-02-01", "first_seen_at"] == first_fetch

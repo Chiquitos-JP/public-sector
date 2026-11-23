@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from psdata import catalog, profile, store
+from psdata import catalog, profile, store, vintages
 from psdata.catalog import Series
 from psdata.paths import bronze_path, reference_path, silver_dir
 from psdata.sources import FETCHERS, REFERENCES, _http
@@ -122,6 +122,7 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
     - ``series.parquet``       カタログ（両方の系列）
     - ``countries.parquet``    国・地域の一覧（パネルの国コードを引く表）
     - ``profile.parquet``      系列ごとの特徴（実物から自動で作る。``psdata.profile``）
+    - ``vintages.parquet``     値の有効期間（その時点で知り得た値を読むため。``psdata.vintages``）
     - ``manifest.json``        この silver を作った時刻・コードの版・実行者・件数
     """
     single, panel = _frames(series)
@@ -140,7 +141,9 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
         pd.concat(refs, ignore_index=True).drop_duplicates("country").to_parquet(out / "countries.parquet", index=False)
     prof = profile.build(series)
     prof.to_parquet(out / "profile.parquet", index=False)
-    _write_manifest(out, obs, pan, table, prof)
+    vin = vintages.build(series)
+    vin.to_parquet(out / "vintages.parquet", index=False)
+    _write_manifest(out, obs, pan, table, prof, vin)
     return obs, pan, table
 
 
@@ -158,7 +161,7 @@ def _git_sha() -> str:
         return ""
 
 
-def _write_manifest(out, obs, pan, table, prof) -> None:
+def _write_manifest(out, obs, pan, table, prof, vin) -> None:
     """silver 全体の記録票。誰が・いつ・どの版のコードで作ったかと、ファイルごとの件数。"""
     run_id = os.environ.get("GITHUB_RUN_ID", "")
     manifest = {
@@ -171,6 +174,10 @@ def _write_manifest(out, obs, pan, table, prof) -> None:
             "panel.parquet": {"rows": len(pan), "series": int(pan["series_id"].nunique())},
             "series.parquet": {"rows": len(table)},
             "profile.parquet": {"rows": len(prof), "stale": prof.loc[prof["is_stale"], "series_id"].tolist()},
+            "vintages.parquet": {
+                "rows": len(vin),
+                "since": vin["valid_from"].min().isoformat() if len(vin) else None,
+            },
         },
     }
     (out / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

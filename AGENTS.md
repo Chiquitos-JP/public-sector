@@ -26,12 +26,13 @@ data/                      git に入れない
 ## データの層
 
 - `raw/<配信元>/<コード>/<時刻>.<拡張子>.gz` — 応答そのまま（gzip）。変更しない。保存先では 90 日を過ぎたら CI が消す
-- `bronze/<配信元>/<id>.parquet` — `date / value / fetched_at`。改定ログ `*.revisions.parquet`、取得記録 `*.provenance.json`（取得ごとに 1 件・全件残す。出所と引数・件数・検証の結果・実行者（CI の run id か手元か）・コードの版・元になった raw のパスと sha256）
+- `bronze/<配信元>/<id>.parquet` — `date / value / fetched_at / first_seen_at`（その行を初めて取得した時刻）。改定ログ `*.revisions.parquet`、取得記録 `*.provenance.json`（取得ごとに 1 件・全件残す。出所と引数・件数・検証の結果・実行者（CI の run id か手元か）・コードの版・元になった raw のパスと sha256）
 - `silver/observations.parquet` — 単一の国の系列。`series_id / country / date / value / fetched_at`（1 行は `series_id / date`）
 - `silver/panel.parquet` — 国をまたぐ系列（`country: ALL`）。列は同じで、1 行は `series_id / country / date`
 - `silver/series.parquet` — カタログ（クレジット・ライセンス）
 - `silver/countries.parquet` — 国・地域の一覧（世界銀行の地域・所得区分・集計値かどうか）
 - `silver/profile.parquet` — 系列ごとの特徴。実物から毎回自動で作る（期間・欠けた期間・最大の空き・値域・1 期の変化幅・公表の遅れ・改定の回数と最大幅・鮮度）
+- `silver/vintages.parquet` — 値の有効期間（`series_id / country / date / value / valid_from / valid_to`）。bronze と改定ログから毎回組み立てる。`client.read(..., as_of=...)` が読む
 - `silver/manifest.json` — silver を作った時刻・コードの版（git）・実行者（CI の run id か手元か）・ファイルごとの件数・`schema_version`
 
 カタログ（`definition` / `notes` / `source_url` など）は手で書く**宣言**、プロファイルは実データの**観察**。
@@ -83,6 +84,7 @@ client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])  # ISO3
 client.catalog()
 client.countries()
 client.groups()
+client.read("fred.M2SL", as_of="2027-01-15")  # その時点で知り得た値（取得した時刻が基準。2026-11-23 より前は不可）
 client.profile("fred.UNRATE")   # 系列ごとの特徴
 client.manifest()
 print(client.describe("wb.FP.CPI.TOTL.ZG"))  # 何を測っているか・前提・出典

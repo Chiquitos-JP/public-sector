@@ -10,7 +10,8 @@
 
 ## ファイル
 
-- ``<id>.parquet``             列: date / value / fetched_at（その値を最後に書き換えた時刻・UTC）
+- ``<id>.parquet``             列: date / value / fetched_at（その値を最後に書き換えた時刻・UTC）/
+                               first_seen_at（その行を初めて取得した時刻・UTC。変わらない）
 - ``<id>.revisions.parquet``   列: date / old_value / new_value / detected_at
 
 国をまたぐ系列（パネル）は ``keys=("country", "date")`` で扱い、どのファイルにも ``country`` 列が付く。
@@ -70,6 +71,34 @@ def read(path: Path) -> pd.DataFrame | None:
         return None
     df = pd.read_parquet(path)
     return None if df.empty else df
+
+
+def _backfill_first_seen(existing: pd.DataFrame, path: Path, keys: tuple[str, ...]) -> pd.DataFrame:
+    """``first_seen_at`` の無い古いストアに補う。
+
+    改定されていない行は ``fetched_at`` がそのまま初めて取った時刻。改定された行は元の値を
+    最初の取得で見ていたので、取得記録の最初の時刻（無ければ最初の改定の時刻）にする。
+    """
+    out = existing.copy()
+    out["first_seen_at"] = pd.to_datetime(out["fetched_at"], utc=True)
+    rp = revisions_path(path)
+    if not rp.is_file():
+        return out
+    rev = pd.read_parquet(rp)
+    if rev.empty:
+        return out
+    pp = provenance_path(path)
+    records = json.loads(pp.read_text(encoding="utf-8")).get("records") if pp.is_file() else []
+    first_fetch = pd.Timestamp(records[0]["fetched_at"]) if records else None
+    rev = rev.astype({k: "string" for k in keys if k != "date"})
+    earliest = rev.groupby(list(keys))["detected_at"].min().rename("_first_rev").reset_index()
+    out = out.astype({k: "string" for k in keys if k != "date"}).merge(earliest, on=list(keys), how="left")
+    revised = out["_first_rev"].notna()
+    bound = pd.to_datetime(out["_first_rev"], utc=True)
+    if first_fetch is not None:
+        bound = pd.Series(first_fetch, index=out.index).where(revised)
+    out.loc[revised, "first_seen_at"] = bound[revised]
+    return out.drop(columns="_first_rev")
 
 
 def fetch_start(path: Path, *, default_start: str, window: pd.DateOffset) -> str:
@@ -201,9 +230,11 @@ def update(
 
     revisions = pd.DataFrame(columns=[*keys, "old_value", "new_value", "detected_at"])
     if existing is None:
-        merged = fresh_n.assign(fetched_at=now)
+        merged = fresh_n.assign(fetched_at=now, first_seen_at=now)
         added, revised = len(merged), 0
     else:
+        if "first_seen_at" not in existing.columns:
+            existing = _backfill_first_seen(existing, path, keys)
         existing = existing.astype({k: "string" for k in keys if k != "date"})
         both = existing.merge(fresh_n, on=list(keys), how="outer", suffixes=("_old", "_new"), indicator=True)
         is_new = both["_merge"] == "right_only"
@@ -239,12 +270,14 @@ def update(
                 **{k: both[k] for k in keys},
                 "value": both["value_new"].where(take_new, both["value_old"]).astype("float64"),
                 "fetched_at": both["fetched_at"].where(~take_new, now),
+                "first_seen_at": both["first_seen_at"].where(~is_new, now),
             }
         )
         merged = merged.sort_values(list(keys)).reset_index(drop=True)
         added, revised = int(is_new.sum()), int(changed.sum())
 
     merged["fetched_at"] = pd.to_datetime(merged["fetched_at"], utc=True)
+    merged["first_seen_at"] = pd.to_datetime(merged["first_seen_at"], utc=True)
     rep.extend(validate_frame(merged, label=f"{name}/マージ後", keys=keys))
     if len(merged) < rows_before:
         rep.errors.append(f"{name}: 行数が減る ({rows_before} → {len(merged)})。蓄積を失うので中止")

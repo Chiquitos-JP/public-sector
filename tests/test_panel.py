@@ -26,7 +26,7 @@ def test_panel_revision_is_per_country(path):
     )
     assert res.written and res.rows_added == 1 and res.rows_revised == 1
     df = store.read(path)
-    assert list(df.columns) == ["country", "date", "value", "fetched_at"]
+    assert list(df.columns) == ["country", "date", "value", "fetched_at", "first_seen_at"]
     log = pd.read_parquet(store.revisions_path(path))
     assert log[["country", "old_value", "new_value"]].values.tolist() == [["HND", 3.6, 3.7]]
 

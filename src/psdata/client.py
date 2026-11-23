@@ -9,6 +9,7 @@
     client.countries()                                            # 国・地域の一覧（地域・所得区分）
     client.groups()                                               # 名前付きの国の組み合わせ
     print(client.describe("wb.FP.CPI.TOTL.ZG"))                   # 何を測っているか・前提・出典・特徴
+    client.read("fred.M2SL", as_of="2026-12-01")                  # その時点で知り得た値（改定前の値）
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数
 
@@ -21,6 +22,7 @@ from __future__ import annotations
 import pandas as pd
 
 from psdata import catalog as _catalog
+from psdata import vintages as _vintages
 from psdata.paths import silver_dir
 
 
@@ -144,10 +146,13 @@ def read(
     countries: str | list[str] | None = None,
     start: str | None = None,
     end: str | None = None,
+    as_of: str | pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     """1 つの単一系列なら date / value、それ以外は series_id / country / date / value の縦長で返す。
 
     国をまたぐ系列は ``countries`` で国を絞る（省略すると全ての国・地域）。
+    ``as_of`` を渡すと、その時点で public-sector が持っていた値を返す（後の改定・後から届いた期間を含めない）。
+    時刻は取得した時刻（UTC。日付だけなら 0 時）で、作成元の公表時刻ではない。取得を始める前の時点は KeyError。
     """
     ids = [series_id] if isinstance(series_id, str) else list(series_id)
     cat = catalog()
@@ -158,6 +163,9 @@ def read(
     single = [i for i in ids if i not in panel_ids]
     panel = [i for i in ids if i in panel_ids]
 
+    if as_of is not None:
+        return _read_as_of(series_id, ids, panel, countries, start, end, as_of)
+
     frames = []
     if single:
         frames.append(pd.read_parquet(silver_dir() / "observations.parquet", filters=_filters(single, start, end)))
@@ -165,6 +173,23 @@ def read(
         extra = [("country", "in", resolve_countries(countries))] if countries is not None else None
         frames.append(pd.read_parquet(silver_dir() / "panel.parquet", filters=_filters(panel, start, end, extra)))
     df = pd.concat(frames, ignore_index=True).sort_values(["series_id", "country", "date"]).reset_index(drop=True)
+    if isinstance(series_id, str) and not panel:
+        return df[["date", "value"]]
+    return df[["series_id", "country", "date", "value"]]
+
+
+def _read_as_of(series_id, ids, panel, countries, start, end, as_of) -> pd.DataFrame:
+    v = pd.read_parquet(silver_dir() / "vintages.parquet", filters=_filters(ids, start, end))
+    if countries is not None and panel:
+        # 国を絞るのはパネルの系列だけ（単一の系列の国は固定）
+        keep = ~v["series_id"].isin(panel) | v["country"].isin(resolve_countries(countries))
+        v = v[keep]
+    since = pd.read_parquet(silver_dir() / "vintages.parquet", columns=["valid_from"])["valid_from"].min()
+    t = pd.Timestamp(as_of)
+    t = t.tz_localize("UTC") if t.tzinfo is None else t.tz_convert("UTC")
+    if pd.isna(since) or t < since:
+        raise KeyError(f"{t} は取得を始める前（{since}）なので再現できない")
+    df = _vintages.as_of(v, t).sort_values(["series_id", "country", "date"]).reset_index(drop=True)
     if isinstance(series_id, str) and not panel:
         return df[["date", "value"]]
     return df[["series_id", "country", "date", "value"]]
