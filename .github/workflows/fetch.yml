@@ -20,6 +20,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write # 下の Keep schedule enabled 用
 
 jobs:
   fetch:
@@ -86,6 +87,14 @@ jobs:
       - name: Push logs to R2
         if: always()
         run: rclone copy logs "$REMOTE/logs/$(date -u +%Y%m%dT%H%M%SZ)-${{ github.run_id }}"
+
+      # 公開リポジトリの定期実行は、リポジトリに 60 日間更新がないと自動で止まる。
+      # データの書き込み先は R2 でコミットが起きないため、実行のたびに有効化し直す
+      - name: Keep schedule enabled
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/fetch.yml/enable"
 
       - name: Fail if any series failed
         if: steps.fetch.outputs.rc != '0'
