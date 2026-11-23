@@ -1,0 +1,236 @@
+# IMF World Economic Outlook（DataMapper API）の系列。id は imf.<指標コード>
+# どれも国をまたぐパネル（country: ALL）で、見通し（未来の年）を含む（projection_years）。
+# WEO は年 2 回の公表なので月 1 回だけ取り、毎回全期間を取り直す（過去の年も改定されるため）。
+# IMF の利用条件で自動の一括ダウンロードは許可が要る。取得は月 1 回・指標ごとに 1 回の呼び出しに抑える
+
+- id: imf.NGDP_RPCH
+  title_ja: 実質 GDP 成長率（IMF WEO）
+  title_en: "Real GDP growth"
+  definition: "実質 GDP の前年比の伸び率（各国通貨建ての不変価格）"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+  source_url: https://www.imf.org/external/datamapper/NGDP_RPCH@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "%"
+  unit_kind: percent
+  price_basis: real
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.PCPIPCH
+  title_ja: 消費者物価上昇率（年平均・IMF WEO）
+  title_en: "Inflation rate, average consumer prices"
+  definition: "消費者物価指数の年平均の前年比"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+  source_url: https://www.imf.org/external/datamapper/PCPIPCH@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "%"
+  unit_kind: percent
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.PCPIEPCH
+  title_ja: 消費者物価上昇率（年末・IMF WEO）
+  title_en: "Inflation rate, end of period consumer prices"
+  definition: "消費者物価指数の年末（12 月など期末）の前年同期比"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+    - "年平均の上昇率（imf.PCPIPCH）とは違う。年の途中の急変が年末の値に強く出る"
+  source_url: https://www.imf.org/external/datamapper/PCPIEPCH@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "%"
+  unit_kind: percent
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.LUR
+  title_ja: 失業率（IMF WEO）
+  title_en: "Unemployment rate"
+  definition: "労働力人口に占める失業者の割合（各国の定義による）"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+    - "各国の公式統計の定義のまま（ILO の推計値とは違い、国どうしの比較は目安）。値の無い国が多い"
+  source_url: https://www.imf.org/external/datamapper/LUR@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "%"
+  unit_kind: percent
+  unit_of: "labor_force"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.GGXCNL_NGDP
+  title_ja: 一般政府の財政収支（GDP 比・IMF WEO）
+  title_en: "General government net lending/borrowing"
+  definition: "一般政府（中央・地方・社会保障基金）の純貸出 / 純借入の GDP 比。プラスが黒字"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+    - "一般政府ベースなので、世界銀行の中央政府の財政収支（wb.GC.NLD.TOTL.GD.ZS）より網羅的で、国どうしで比べやすい"
+  source_url: https://www.imf.org/external/datamapper/GGXCNL_NGDP@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.GGXWDG_NGDP
+  title_ja: 一般政府の債務残高（GDP 比・IMF WEO）
+  title_en: "General government gross debt"
+  definition: "一般政府の債務残高（総額）の GDP 比"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+    - "一般政府ベースの総債務。世界銀行の中央政府債務（wb.GC.DOD.TOTL.GD.ZS）より収録国が多い"
+  source_url: https://www.imf.org/external/datamapper/GGXWDG_NGDP@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.BCA_NGDPD
+  title_ja: 経常収支（GDP 比・IMF WEO）
+  title_en: "Current account balance, percent of GDP"
+  definition: "経常収支の GDP 比。プラスが黒字"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+  source_url: https://www.imf.org/external/datamapper/BCA_NGDPD@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.NGDPD
+  title_ja: 名目 GDP（米ドル・IMF WEO）
+  title_en: "GDP, current prices (U.S. dollars)"
+  definition: "名目 GDP を米ドルに換算した値"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+    - "為替の動きで年ごとの増減が大きく出る"
+  source_url: https://www.imf.org/external/datamapper/NGDPD@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "十億ドル"
+  unit_kind: currency
+  currency: USD
+  scale: 9
+  price_basis: nominal
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: imf.NGDPDPC
+  title_ja: 1 人当たり名目 GDP（米ドル・IMF WEO）
+  title_en: "GDP per capita, current prices (U.S. dollars)"
+  definition: "名目 GDP（米ドル）を人口で割った値"
+  notes:
+    - "IMF の World Economic Outlook（WEO）。年 2 回（4 月・10 月）の公表のたびに、過去の年も含めて全体が改定される。改定前の値は as_of で読める"
+    - "見通し（未来の年）を含む。どの年から見通しかは国ごとに違う（最新の公表年の前後から推計・見通し）。実績として使うときは期間を確かめる"
+  source_url: https://www.imf.org/external/datamapper/NGDPDPC@WEO
+  creator: imf
+  distributor: imf
+  country: ALL
+  freq: A
+  unit: "米ドル"
+  unit_kind: currency
+  unit_of: "per_capita"
+  currency: USD
+  price_basis: nominal
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 30D
+  projection_years: 7
+  start: "1980-01-01"
+  used_by:
+    - u04
+    - u05

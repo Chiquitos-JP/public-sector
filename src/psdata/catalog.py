@@ -63,6 +63,12 @@ class Series:
     original_source: str = ""
     #: 取得の間隔（例: 7D）。空なら毎回取る。更新の少ない年次統計で CI の時間を節約する
     fetch_every: str = ""
+    #: 見通し（未来の期間）を何年先まで含むか。0 なら未来の日付は検証で止める
+    projection_years: int = 0
+
+    @property
+    def allow_future_days(self) -> int:
+        return 1 + 366 * self.projection_years
 
     @property
     def is_panel(self) -> bool:
@@ -164,6 +170,8 @@ def validate(series: list[Series], sources: dict) -> list[str]:
             errors.append(f"{pre} unit_kind {s.unit_kind} には unit_of（指数の基準・通貨の組）が要る")
         if not isinstance(s.scale, int) or not -3 <= s.scale <= 15:
             errors.append(f"{pre} scale は 10 の何乗かの整数（例: 十億 = 9）")
+        if not isinstance(s.projection_years, int) or not 0 <= s.projection_years <= 10:
+            errors.append(f"{pre} projection_years は 0〜10 の整数")
         if s.price_basis not in PRICE_BASES:
             errors.append(f"{pre} price_basis は nominal / real / 空")
         if not s.definition.strip():
@@ -214,6 +222,7 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "distributor": sources["distributors"][s.distributor]["name"],
                 "source_url": s.source_url,
                 "tier": s.tier,
+                "projection_years": s.projection_years,
             }
         )
     return pd.DataFrame(rows)

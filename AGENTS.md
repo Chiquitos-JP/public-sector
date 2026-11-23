@@ -57,6 +57,7 @@ data/                      git に入れない
 1. 作成元が `catalog/sources.yml` に無ければ追加する
 2. `catalog/series/<配信元>.yml` に定義を書く。単位は表示用の `unit` とは別に、機械が読む `unit_kind`（percent / index / currency / fx / count）・`unit_of`（% なら何に対する比、指数なら基準、為替なら通貨の組）・`currency`（ISO 4217）・`scale`（10 の何乗か。十億 = 9）・`price_basis`（nominal / real）を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
 3. 新しい配信元は `src/psdata/sources/<配信元>.py` に `fetch(series, start)` を書き、`FETCHERS` に登録する
+   見通し（未来の期間）を含む系列は `projection_years` を書く（書かなければ未来の日付は検証で止まる）
 4. `scripts/validate.py` と `pytest` を通す
 
 ## 必要なときに引き出す

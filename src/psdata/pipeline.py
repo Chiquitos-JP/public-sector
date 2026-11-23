@@ -81,6 +81,7 @@ def refresh(series: Series, *, full: bool = False) -> store.UpdateResult:
         # パネルは成長率など 0 をまたぐ指標が多く、前期比の警告は意味をなさない
         max_abs_pct_change=None if series.is_panel else 1.0,
         context=context,
+        allow_future_days=series.allow_future_days,
     )
 
 
@@ -151,7 +152,7 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
 
 
 #: silver の形の版。列や意味を変えたら上げて、利用側へ先に知らせる
-SCHEMA_VERSION = 2  # 2: series.parquet に単位の列（unit_kind / unit_of / currency / scale / price_basis）
+SCHEMA_VERSION = 3  # 2: series.parquet に単位の列 / 3: series.parquet に projection_years
 
 
 def _git_sha() -> str:

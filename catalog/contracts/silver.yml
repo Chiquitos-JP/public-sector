@@ -5,7 +5,7 @@
 #
 # type: string / date（期間の開始日。時刻なし）/ timestamp_utc / float / int / bool
 
-schema_version: 2
+schema_version: 3
 
 tables:
   observations:
@@ -64,6 +64,7 @@ tables:
       distributor: {type: string, meaning: "配信元"}
       source_url: {type: string, meaning: "定義を確かめられる公式のページ"}
       tier: {type: string, meaning: "常備か取り置きか", values: [stocked, on_demand]}
+      projection_years: {type: int, meaning: "見通し（未来の期間）を何年先まで含むか。0 なら実績だけ"}
 
   profile:
     grain: 1 系列（実データから毎回作る観察）

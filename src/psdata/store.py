@@ -195,6 +195,7 @@ def update(
     label: str | None = None,
     keys: tuple[str, ...] = ("date",),
     context: dict[str, Any] | None = None,
+    allow_future_days: int = 1,
 ) -> UpdateResult:
     """``start`` 以降を取り直した ``fresh``（keys / value）でストアを更新する。
 
@@ -208,7 +209,8 @@ def update(
     keys = tuple(keys)
     fresh_n = _normalize(fresh, keys)
     fresh_n = fresh_n[fresh_n["date"] >= start_ts].sort_values(list(keys)).reset_index(drop=True)
-    rep = validate_frame(fresh_n, label=f"{name}/新規", max_abs_pct_change=max_abs_pct_change, keys=keys)
+    rep = validate_frame(fresh_n, label=f"{name}/新規", max_abs_pct_change=max_abs_pct_change, keys=keys,
+                         allow_future_days=allow_future_days)
 
     existing = read(path)
     rows_before = 0 if existing is None else len(existing)
@@ -278,7 +280,7 @@ def update(
 
     merged["fetched_at"] = pd.to_datetime(merged["fetched_at"], utc=True)
     merged["first_seen_at"] = pd.to_datetime(merged["first_seen_at"], utc=True)
-    rep.extend(validate_frame(merged, label=f"{name}/マージ後", keys=keys))
+    rep.extend(validate_frame(merged, label=f"{name}/マージ後", keys=keys, allow_future_days=allow_future_days))
     if len(merged) < rows_before:
         rep.errors.append(f"{name}: 行数が減る ({rows_before} → {len(merged)})。蓄積を失うので中止")
     if not rep.ok:

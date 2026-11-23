@@ -32,7 +32,7 @@ def main() -> int:
         if df is None:
             errors.append(f"{s.id}: ストアが無い（scripts/fetch.py で作る）")
             continue
-        rep = store.validate_frame(df, label=s.id, keys=s.keys)
+        rep = store.validate_frame(df, label=s.id, keys=s.keys, allow_future_days=s.allow_future_days)
         errors += rep.errors
         warnings += rep.warnings
         age = (pd.Timestamp.now().normalize() - pd.Timestamp(df["date"].max())).days
