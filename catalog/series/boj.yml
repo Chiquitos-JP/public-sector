@@ -1,0 +1,16 @@
+# 日銀 時系列統計データ検索サイト API の系列。id は boj.<DB>.<コード>
+
+- id: boj.FM08.FXERD04
+  title_ja: 東京市場 ドル・円 スポット 17 時時点
+  title_en: USD/JPY Spot Rate at 17:00 in the Tokyo Market
+  creator: boj
+  distributor: boj
+  country: JPN
+  freq: D
+  unit: 円/ドル
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 10D
+  start: "2006-01-01"
+  used_by:
+    - u02

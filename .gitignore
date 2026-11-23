@@ -1,0 +1,47 @@
+# Quarto output
+_site/
+.quarto/
+
+# Data (正本は R2。git には入れない)
+data/
+
+# Environment
+.env
+.env.local
+
+# R
+.Rhistory
+.Rdata
+.RData
+.Ruserdata
+*.Rproj.user/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+.venv-mac/
+.pytest_cache/
+*.egg-info/
+
+# Claude Code
+.claude/settings.local.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+/.quarto/
+**/*.quarto_ipynb

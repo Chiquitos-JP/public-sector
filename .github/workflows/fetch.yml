@@ -1,0 +1,94 @@
+# 常備系列の定期取得。R2（public-sector-data）に書くのはこのワークフローだけ。
+#
+# 流れ: R2 から bronze を取り込む → 取り直し（改定対応）→ silver 再構築 → 検証 → R2 へ書く
+# 1 系列の取得に失敗しても、検証を通った他の系列は書く。そのうえでジョブは失敗にする。
+name: fetch
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 毎日 07:00 JST
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "定義上の開始日から全期間を取り直す"
+        type: boolean
+        default: false
+
+concurrency:
+  group: fetch
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      RCLONE_CONFIG_PS_TYPE: s3
+      RCLONE_CONFIG_PS_PROVIDER: Cloudflare
+      RCLONE_CONFIG_PS_ACCESS_KEY_ID: ${{ secrets.PS_R2_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_PS_SECRET_ACCESS_KEY: ${{ secrets.PS_R2_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_PS_ENDPOINT: ${{ secrets.PS_R2_ENDPOINT }}
+      RCLONE_CONFIG_PS_REGION: auto
+      RCLONE_CONFIG_PS_NO_CHECK_BUCKET: "true"
+      RCLONE_CONFIG_PS_ACL: private
+      REMOTE: ps:public-sector-data
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install -e '.[dev]'
+          sudo apt-get update -qq && sudo apt-get install -y -qq rclone
+          rclone version
+
+      - name: Test
+        run: python -m pytest -q
+
+      - name: Pull bronze from R2
+        run: rclone copy "$REMOTE/bronze" data/bronze --transfers 8
+
+      - name: Fetch
+        id: fetch
+        # 公開ログには件数だけを出し、詳細は保存先の logs/ に置く
+        run: |
+          mkdir -p logs
+          set +e
+          python scripts/fetch.py ${{ inputs.full && '--full' || '' }} > logs/fetch.log 2>&1
+          rc=$?
+          set -e
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "成功 $(grep -c '^  ✅' logs/fetch.log) / 失敗 $(grep -c '^  ❌' logs/fetch.log)"
+
+      - name: Validate
+        run: |
+          set +e
+          python scripts/validate.py > logs/validate.log 2>&1
+          rc=$?
+          set -e
+          tail -n 1 logs/validate.log
+          exit "$rc"
+
+      - name: Push to R2
+        run: |
+          for layer in raw bronze silver; do
+            rclone copy "data/$layer" "$REMOTE/$layer" --transfers 8
+          done
+
+      - name: Push logs to R2
+        if: always()
+        run: rclone copy logs "$REMOTE/logs/$(date -u +%Y%m%dT%H%M%SZ)-${{ github.run_id }}"
+
+      - name: Fail if any series failed
+        if: steps.fetch.outputs.rc != '0'
+        run: |
+          echo "::error::取得に失敗した系列がある（詳細は保存先の logs/）"
+          exit 1

@@ -1,0 +1,106 @@
+# FRED 経由の系列
+
+- id: fred.FEDFUNDS
+  title_ja: 米フェデラルファンド実効金利（月平均）
+  title_en: Federal Funds Effective Rate
+  creator: frb
+  distributor: fred
+  country: USA
+  freq: M
+  unit: "%"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 1Y
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.UNRATE
+  title_ja: 米失業率
+  title_en: Unemployment Rate
+  creator: bls
+  distributor: fred
+  country: USA
+  freq: M
+  unit: "%"
+  seasonal_adjustment: SA
+  tier: stocked
+  refetch_window: 5Y
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.CPIAUCSL
+  title_ja: 米消費者物価指数（全都市・全品目）
+  title_en: Consumer Price Index for All Urban Consumers, All Items
+  creator: bls
+  distributor: fred
+  country: USA
+  freq: M
+  unit: 指数（1982-84=100）
+  seasonal_adjustment: SA
+  tier: stocked
+  refetch_window: 5Y
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.M2SL
+  title_ja: 米マネーサプライ M2
+  title_en: M2
+  creator: frb
+  distributor: fred
+  country: USA
+  freq: M
+  unit: 十億ドル
+  seasonal_adjustment: SA
+  tier: stocked
+  refetch_window: 5Y
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.WALCL
+  title_ja: FRB 総資産（水曜時点）
+  title_en: "Assets: Total Assets: Wednesday Level"
+  creator: frb
+  distributor: fred
+  country: USA
+  freq: W
+  unit: 百万ドル
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 8W
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.DGS10
+  title_ja: 米 10 年国債利回り（コンスタント・マチュリティ）
+  title_en: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
+  creator: frb
+  distributor: fred
+  country: USA
+  freq: D
+  unit: "%"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 10D
+  start: "2006-01-01"
+  used_by:
+    - u01
+
+- id: fred.DEXJPUS
+  title_ja: 円/ドル為替レート（NY 正午）
+  title_en: Japanese Yen to U.S. Dollar Spot Exchange Rate
+  creator: frb
+  distributor: fred
+  country: JPN
+  freq: D
+  unit: 円/ドル
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 10D
+  start: "2006-01-01"
+  used_by:
+    - u03
