@@ -59,3 +59,26 @@ def test_build_silver_writes_profile_and_manifest(tmp_path, monkeypatch):
     assert m["files"]["profile.parquet"]["rows"] == 1
     assert list(client.profile("fred.UNRATE")["series_id"]) == ["fred.UNRATE"]
     assert "特徴（実データから自動）" in client.describe("fred.UNRATE")
+
+
+def test_provenance_records_who_which_code_and_raw(tmp_path, monkeypatch):
+    import hashlib
+
+    from psdata.sources._http import save_raw
+
+    monkeypatch.setenv("PSDATA_DIR", str(tmp_path))
+    monkeypatch.setenv("GITHUB_RUN_ID", "777")
+    s = _series("fred.UNRATE")
+
+    def fake(series, start):
+        save_raw("fred", "UNRATE", "observation_date,UNRATE\n2026-01-01,4.0\n", "csv")
+        return pd.DataFrame({"date": pd.to_datetime(["2026-01-01"]), "value": [4.0]}), {"route": "csv"}
+
+    monkeypatch.setattr(pipeline, "FETCHERS", {"fred": fake})
+    pipeline.refresh(s)
+    rec = json.loads(store.provenance_path(tmp_path / "bronze" / "fred" / "fred.UNRATE.parquet").read_text())["records"][-1]
+    assert rec["actor"]["kind"] == "ci" and rec["actor"]["ci_run_id"] == "777"
+    assert rec["mode"] == "incremental" and rec["code"]["python"]
+    (raw,) = rec["raw"]
+    data = (tmp_path / "raw" / raw["path"]).read_bytes()
+    assert hashlib.sha256(data).hexdigest() == raw["sha256"] and raw["bytes"] == len(data)

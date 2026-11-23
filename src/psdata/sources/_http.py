@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import time
 from pathlib import Path
 from datetime import datetime, timezone
@@ -11,6 +12,9 @@ from psdata.paths import raw_dir
 
 # User-Agent は requests の既定値のまま（独自の値は FRED に拒否される）
 HTTP_TIMEOUT = 60
+
+#: この取得で書いた raw の一覧。pipeline が取得の前に空にし、後で取得記録に写す
+SAVED: list[dict] = []
 
 
 def get(url: str, params: dict, *, timeout: float = HTTP_TIMEOUT, retries: int = 0) -> requests.Response:
@@ -39,5 +43,11 @@ def save_raw(source: str, code: str, body: str, ext: str) -> Path:
     d.mkdir(parents=True, exist_ok=True)
     path = d / f"{stamp}.{ext}.gz"
     # mtime=0 にして、同じ応答なら同じバイト列になるようにする
-    path.write_bytes(gzip.compress(body.encode("utf-8"), mtime=0))
+    data = gzip.compress(body.encode("utf-8"), mtime=0)
+    path.write_bytes(data)
+    SAVED.append({
+        "path": path.relative_to(raw_dir(source).parent).as_posix(),
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "bytes": len(data),
+    })
     return path

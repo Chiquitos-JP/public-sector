@@ -165,8 +165,12 @@ def update(
     revision_warn_pct: float = 0.05,
     label: str | None = None,
     keys: tuple[str, ...] = ("date",),
+    context: dict[str, Any] | None = None,
 ) -> UpdateResult:
-    """``start`` 以降を取り直した ``fresh``（keys / value）でストアを更新する。"""
+    """``start`` 以降を取り直した ``fresh``（keys / value）でストアを更新する。
+
+    ``context`` は取得記録に添える「誰が・どの版で・どの応答から」（``psdata.pipeline.run_context``）。
+    """
     path = Path(path)
     name = label or path.stem
     now = pd.Timestamp(datetime.now(timezone.utc))
@@ -262,6 +266,7 @@ def update(
             "fetched_at": now.isoformat(timespec="seconds"),
             "source": source,
             "params": {**(params or {}), "fetch_start": start},
+            **(context or {}),
             "rows_before": rows_before,
             "rows_after": result.rows_after,
             "rows_added": added,

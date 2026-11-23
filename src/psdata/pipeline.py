@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import os
+import platform
+from importlib import metadata
 import subprocess
 from datetime import datetime, timezone
 
@@ -11,7 +13,7 @@ import pandas as pd
 from psdata import catalog, profile, store
 from psdata.catalog import Series
 from psdata.paths import bronze_path, reference_path, silver_dir
-from psdata.sources import FETCHERS, REFERENCES
+from psdata.sources import FETCHERS, REFERENCES, _http
 
 OBSERVATION_COLUMNS = ["series_id", "country", "date", "value", "fetched_at"]
 
@@ -37,13 +39,34 @@ def is_due(series: Series, now: pd.Timestamp | None = None) -> bool:
     return now >= last + catalog.parse_window(series.fetch_every) - pd.Timedelta(hours=12)
 
 
+def run_context() -> dict:
+    """取得記録に添える「誰が・どの版で」。個人を特定する情報（ユーザー名・ホスト名）は入れない。"""
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    try:
+        version = metadata.version("psdata")
+    except metadata.PackageNotFoundError:
+        version = ""
+    return {
+        "actor": {
+            "kind": "ci" if run_id else "local",
+            "ci_run_id": run_id,
+            "ci_workflow": os.environ.get("GITHUB_WORKFLOW", ""),
+            "ci_event": os.environ.get("GITHUB_EVENT_NAME", ""),
+            "platform": f"{platform.system()}-{platform.machine()}",
+        },
+        "code": {"git_sha": _git_sha(), "psdata": version, "python": platform.python_version()},
+    }
+
+
 def refresh(series: Series, *, full: bool = False) -> store.UpdateResult:
     """1 系列を取り直して bronze を更新する。``full`` なら定義上の開始日から取り直す。"""
     path = bronze_path(series.id)
     start = series.start if full else store.fetch_start(
         path, default_start=series.start, window=catalog.parse_window(series.refetch_window)
     )
+    _http.SAVED.clear()
     fresh, params = FETCHERS[series.distributor](series, start)
+    context = {**run_context(), "mode": "full" if full else "incremental", "raw": list(_http.SAVED)}
     return store.update(
         path,
         fresh,
@@ -54,6 +77,7 @@ def refresh(series: Series, *, full: bool = False) -> store.UpdateResult:
         keys=series.keys,
         # パネルは成長率など 0 をまたぐ指標が多く、前期比の警告は意味をなさない
         max_abs_pct_change=None if series.is_panel else 1.0,
+        context=context,
     )
 
 
