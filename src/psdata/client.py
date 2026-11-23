@@ -15,6 +15,7 @@
     print(client.draft("wb.SE.PRM.ENRR"))                         # 常備に上げるときのカタログの下書き
     df = client.extract(["wb.NY.GDP.MKTP.KD.ZG"], countries="g7", measures=["value"])  # 目的に合わせた tidy な表
     client.export(df, "out/macro.xlsx")                           # データカード（出典・定義・前提）付きで書き出す
+    client.sql("select * from obs where series_id = 'fred.UNRATE'")  # SQL で読む（DuckDB。ビューは psdata.db）
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数
 
@@ -256,3 +257,17 @@ def export(df: pd.DataFrame, path: str, query: dict | None = None) -> list[str]:
     prof = pd.read_parquet(path_prof) if path_prof.is_file() else None
     c = _extract.card(df, catalog(), prof, q)
     return [str(p) for p in _extract.write(df, path, c)]
+
+
+def db(source: str = "local"):
+    """silver をビューにした DuckDB の接続。``source="r2"`` で保存先を直接読む。ビューは ``psdata.db``。"""
+    from psdata import db as _db
+
+    return _db.connect(source)
+
+
+def sql(query: str, params: list | None = None, source: str = "local") -> pd.DataFrame:
+    """SQL で読む（DuckDB）。ビュー: obs / observations / panel / series / profile / vintages / countries / groups、表関数 as_of(t)。"""
+    from psdata import db as _db
+
+    return _db.sql(query, params, source)

@@ -66,6 +66,19 @@ data/                      git に入れない
 取り置きの段階では収録基準を確かめていない（FRED には再配布できない系列が混ざる）。
 **常備に上げる基準**: 2 回以上の作業で使う・CI や別のプロジェクトから読む・改定を追いたい、のどれかに当たり、収録基準を満たすもの。上げたら下の「系列の追加」に従う。
 
+## SQL で読む（DuckDB）
+
+```python
+client.sql("select * from obs where series_id = 'fred.UNRATE' order by date desc limit 3")
+client.sql("select * from as_of('2027-01-15') where series_id = 'fred.M2SL'")
+client.sql("select ...", source="r2")   # 保存先を直接読む（pull しなくてよい）
+con = client.db()                        # duckdb の接続
+```
+
+- 保存の形は Parquet のまま。DuckDB はビューを被せるだけで、何も書かない
+- ビュー: `obs`（単一の系列とパネルを合わせた観測値）/ `observations` / `panel` / `series` / `profile` / `vintages` / `countries` / `groups`、表関数 `as_of(t)`（定義は `src/psdata/db.py`）
+- `source="r2"` は読み取り専用の鍵を使う: 環境変数 `PSDATA_R2_KEY_ID` / `PSDATA_R2_SECRET` / `PSDATA_R2_ENDPOINT`、無ければ rclone の remote `r2ps`。鍵はメモリの中だけで使う。初回は DuckDB が httpfs 拡張を取ってくる
+
 ## 目的に合わせて切り出す（アドホックな利用）
 
 ```python
@@ -89,7 +102,7 @@ python3 -m venv .venv-mac && .venv-mac/bin/python3 -m pip install -e '.[dev]'
 .venv-mac/bin/python3 -m pytest
 ```
 
-環境変数: `FRED_API_KEY`（任意）、`PSDATA_DIR`（データの場所。既定は `data/`）
+環境変数: `FRED_API_KEY`（任意）、`PSDATA_DIR`（データの場所。既定は `data/`）、`PSDATA_R2_KEY_ID` / `PSDATA_R2_SECRET` / `PSDATA_R2_ENDPOINT`（任意。`client.sql(source="r2")` 用）
 
 ## 保存先と定期取得
 

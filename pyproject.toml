@@ -13,6 +13,7 @@ dependencies = [
     "requests>=2.31",
     "pyyaml>=6",
     "openpyxl>=3.1",  # Excel への書き出し（client.export）
+    "duckdb>=1.4",  # SQL で読む（client.sql）
 ]
 
 [project.optional-dependencies]
