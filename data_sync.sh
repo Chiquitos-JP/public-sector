@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------------------
 # R2（public-sector-data）→ ローカル data/ の取り込み。
 #
-#   ./data_sync.sh pull     # R2 → ローカル（bronze / silver / gold）
+#   ./data_sync.sh pull     # R2 → ローカル（bronze / silver / gold / docs）
 #   ./data_sync.sh status   # R2 とローカルの差分（ドライラン）
 #
 # R2 に書くのは定期取得の CI（.github/workflows/fetch.yml）だけ。手元からは push しない
@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 REMOTE="r2ps:public-sector-data"
-LAYERS=(bronze silver gold)
+LAYERS=(bronze silver gold docs)
 
 command -v rclone >/dev/null 2>&1 || { echo "❌ rclone が見つからない"; exit 1; }
 

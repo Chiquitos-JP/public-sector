@@ -1,0 +1,114 @@
+# silver の表の契約（機械が読む）。列・型・意味・1 行の単位を決め、scripts/validate.py が毎回確かめる。
+# 違反すると CI の Validate が失敗し、保存先に書かない（書かずに止める）。
+# 列を足す・意味を変えるときは、ここと src/psdata/pipeline.py の SCHEMA_VERSION を同じ変更で直す。
+# observations の列名・意味と系列 id は、変える前に利用側へ知らせる（AGENTS.md）。
+#
+# type: string / date（期間の開始日。時刻なし）/ timestamp_utc / float / int / bool
+
+schema_version: 2
+
+tables:
+  observations:
+    grain: 単一の国の系列の 1 観測
+    primary_key: [series_id, date]
+    contract_with_consumers: true
+    columns:
+      series_id: {type: string, meaning: "系列 id（<配信元>.<元のコード>）", references: series.series_id}
+      country: {type: string, meaning: "国（ISO3）"}
+      date: {type: date, meaning: "期間の開始日"}
+      value: {type: float, nullable: true, meaning: "値（単位は series の unit / unit_kind / scale）"}
+      fetched_at: {type: timestamp_utc, meaning: "その値を最後に書き換えた時刻。鮮度には使わない"}
+
+  panel:
+    grain: 国をまたぐ系列の 1 観測
+    primary_key: [series_id, country, date]
+    columns:
+      series_id: {type: string, meaning: "系列 id", references: series.series_id}
+      country: {type: string, meaning: "国・地域（ISO3。世界銀行の集計値を含む）", references: countries.country}
+      date: {type: date, meaning: "期間の開始日"}
+      value: {type: float, nullable: true, meaning: "値"}
+      fetched_at: {type: timestamp_utc, meaning: "その値を最後に書き換えた時刻"}
+
+  vintages:
+    grain: 1 つの値が有効だった 1 期間
+    primary_key: [series_id, country, date, valid_from]
+    columns:
+      series_id: {type: string, meaning: "系列 id", references: series.series_id}
+      country: {type: string, meaning: "国・地域（ISO3）"}
+      date: {type: date, meaning: "期間の開始日"}
+      value: {type: float, nullable: true, meaning: "その期間に正しいとされていた値"}
+      valid_from: {type: timestamp_utc, meaning: "この値を public-sector が知った時刻"}
+      valid_to: {type: timestamp_utc, nullable: true, meaning: "次の値に変わった時刻（今も有効なら空）"}
+
+  series:
+    grain: 1 系列（カタログ・手で書く宣言）
+    primary_key: [series_id]
+    columns:
+      series_id: {type: string, meaning: "系列 id"}
+      title_ja: {type: string, meaning: "系列名"}
+      title_en: {type: string, meaning: "系列名（英語・作成元の表記）"}
+      definition: {type: string, meaning: "何を測っているか"}
+      notes: {type: string, meaning: "読むときの前提（改行区切り）"}
+      country: {type: string, meaning: "国（ISO3）。国をまたぐ系列は ALL"}
+      freq: {type: string, meaning: "頻度", values: [D, W, M, Q, A]}
+      unit: {type: string, meaning: "表示用の単位"}
+      unit_kind: {type: string, meaning: "単位の種類", values: [percent, index, currency, fx, count]}
+      unit_of: {type: string, meaning: "何に対する値か（GDP・基準・通貨の組など）"}
+      currency: {type: string, meaning: "通貨（ISO 4217）。金額・為替のみ"}
+      scale: {type: int, meaning: "倍率（10 の何乗か）"}
+      price_basis: {type: string, meaning: "名目か実質か", values: ["", nominal, real]}
+      seasonal_adjustment: {type: string, meaning: "季節調整（SA / NSA）"}
+      creator: {type: string, meaning: "作成元"}
+      license: {type: string, meaning: "ライセンス"}
+      credit: {type: string, meaning: "出典として書く文"}
+      distributor: {type: string, meaning: "配信元"}
+      source_url: {type: string, meaning: "定義を確かめられる公式のページ"}
+      tier: {type: string, meaning: "常備か取り置きか", values: [stocked, on_demand]}
+
+  profile:
+    grain: 1 系列（実データから毎回作る観察）
+    primary_key: [series_id]
+    columns:
+      series_id: {type: string, meaning: "系列 id", references: series.series_id}
+      freq: {type: string, meaning: "頻度"}
+      is_panel: {type: bool, meaning: "国をまたぐ系列か"}
+      first_date: {type: date, meaning: "最初の期間"}
+      last_observation_date: {type: date, meaning: "最後の期間。取得が動いているかはこれで見る"}
+      n_obs: {type: int, meaning: "観測の数"}
+      n_countries: {type: int, meaning: "国・地域の数"}
+      n_countries_at_last: {type: int, meaning: "最後の期間に値がある国・地域の数"}
+      missing_periods: {type: int, meaning: "欠けた期間の数（月次・四半期・年次の単一系列）"}
+      missing_dates: {type: string, meaning: "欠けた期間（カンマ区切り）"}
+      max_gap_days: {type: float, nullable: true, meaning: "観測の間の最大の日数（国ごとに測る）"}
+      median_gap_days: {type: float, nullable: true, meaning: "観測の間の日数の中央値"}
+      value_min: {type: float, meaning: "最小値"}
+      value_p01: {type: float, meaning: "1% 点"}
+      value_median: {type: float, meaning: "中央値"}
+      value_p99: {type: float, meaning: "99% 点"}
+      value_max: {type: float, meaning: "最大値"}
+      abs_change_p50: {type: float, nullable: true, meaning: "1 期の変化幅の中央値"}
+      abs_change_p99: {type: float, nullable: true, meaning: "1 期の変化幅の 99% 点"}
+      abs_change_max: {type: float, nullable: true, meaning: "1 期の変化幅の最大"}
+      pct_change_p99: {type: float, nullable: true, meaning: "1 期の変化率の 99% 点（値がすべて正の系列だけ）"}
+      n_revisions: {type: int, meaning: "改定の回数"}
+      max_rel_revision: {type: float, nullable: true, meaning: "改定の最大の相対幅"}
+      last_revision_at: {type: timestamp_utc, nullable: true, meaning: "最後に改定に気づいた時刻"}
+      release_lag_days_median: {type: float, nullable: true, meaning: "公表の遅れ（取得時刻 − 最新の期間の開始日）の中央値"}
+      release_lag_days_now: {type: float, meaning: "今の時点で最新の期間が何日前か"}
+      last_checked_at: {type: timestamp_utc, nullable: true, meaning: "最後に取り直して確かめた時刻"}
+      last_changed_at: {type: timestamp_utc, meaning: "最後に値が変わった時刻"}
+      stale_limit_days: {type: int, meaning: "古いとする日数（頻度ごと）"}
+      is_stale: {type: bool, meaning: "古いか"}
+
+  countries:
+    grain: 1 つの国・地域
+    primary_key: [country]
+    columns:
+      country: {type: string, meaning: "ISO3（世界銀行の集計値のコードを含む）"}
+      name: {type: string, meaning: "名前（世界銀行の表記）"}
+      region: {type: string, meaning: "地域のコード（集計値は空）"}
+      region_name: {type: string, meaning: "地域の名前"}
+      income: {type: string, meaning: "所得区分のコード"}
+      income_name: {type: string, meaning: "所得区分の名前"}
+      lending: {type: string, meaning: "世界銀行の融資区分"}
+      is_aggregate: {type: bool, meaning: "地域・所得区分などの集計値か"}

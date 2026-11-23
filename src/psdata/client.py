@@ -281,3 +281,11 @@ def sql(query: str, params: list | None = None, source: str = "local") -> pd.Dat
     from psdata import db as _db
 
     return _db.sql(query, params, source)
+
+
+def contract(table: str | None = None) -> dict:
+    """silver の表の契約（列・型・意味・1 行の単位）。``catalog/contracts/silver.yml``。"""
+    from psdata import contracts as _contracts
+
+    c = _contracts.load()
+    return c if table is None else c["tables"][table]

@@ -33,6 +33,7 @@ data/                      git に入れない
 - `silver/countries.parquet` — 国・地域の一覧（世界銀行の地域・所得区分・集計値かどうか）
 - `silver/profile.parquet` — 系列ごとの特徴。実物から毎回自動で作る（期間・欠けた期間・最大の空き・値域・1 期の変化幅・公表の遅れ・改定の回数と最大幅・鮮度）
 - `silver/vintages.parquet` — 値の有効期間（`series_id / country / date / value / valid_from / valid_to`）。bronze と改定ログから毎回組み立てる。`client.read(..., as_of=...)` が読む
+- `docs/catalog/series.json` / `tables.json` — 目録（持っている系列と表の一覧。CI が毎回 `scripts/catalog_summary.py` で作る）
 - `silver/manifest.json` — silver を作った時刻・コードの版（git）・実行者（CI の run id か手元か）・ファイルごとの件数・`schema_version`
 
 カタログ（`definition` / `notes` / `source_url` など）は手で書く**宣言**、プロファイルは実データの**観察**。
@@ -47,6 +48,8 @@ data/                      git に入れない
 取得が動いているかの判定には使わず、系列ごとの最終 `date` で判定する。
 
 **利用側との契約**: `silver/observations.parquet` の列名・意味と系列 id は、変える前に利用側へ知らせる。
+**表の契約**: silver の各表の列・型・意味・1 行の単位・参照は `catalog/contracts/silver.yml`（`client.contract()`）。
+`scripts/validate.py` が毎回確かめ、違反すれば CI は保存先に書かない。列を足す・意味を変えるときは、契約と `pipeline.SCHEMA_VERSION` を同じ変更で直す。
 国をまたぐ系列は `observations.parquet` に混ぜない（利用側は `series_id / date` が重ならない前提で読む）。
 
 ## 系列の追加

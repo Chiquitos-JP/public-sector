@@ -9,7 +9,7 @@ import sys
 
 import pandas as pd
 
-from psdata import catalog, store
+from psdata import catalog, contracts, pipeline, store
 from psdata.paths import bronze_path, silver_dir
 
 MAX_STALE_DAYS = catalog.MAX_STALE_DAYS
@@ -38,6 +38,13 @@ def main() -> int:
         age = (pd.Timestamp.now().normalize() - pd.Timestamp(df["date"].max())).days
         if age > MAX_STALE_DAYS[s.freq]:
             warnings.append(f"{s.id}: 最終日が {age} 日前（{df['date'].max().date()}）")
+
+    # silver の表の契約（catalog/contracts/silver.yml）。違反すれば CI は保存先に書かない
+    contract = contracts.load()
+    if contract["schema_version"] != pipeline.SCHEMA_VERSION:
+        errors.append(f"契約の schema_version {contract['schema_version']} と pipeline.SCHEMA_VERSION {pipeline.SCHEMA_VERSION} が違う")
+    if (silver_dir() / "series.parquet").is_file():
+        errors += [f"契約: {e}" for e in contracts.check_silver(contract=contract)]
 
     for w in warnings:
         print(f"⚠️ {w}")

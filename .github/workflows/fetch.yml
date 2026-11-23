@@ -80,9 +80,13 @@ jobs:
           tail -n 1 logs/validate.log
           exit "$rc"
 
+      # 目録（持っている系列と表の一覧）。ダッシュボードはこれを読んで差し替える
+      - name: Build catalogue summary
+        run: python scripts/catalog_summary.py data/docs/catalog > /dev/null
+
       - name: Push to R2
         run: |
-          for layer in raw bronze silver; do
+          for layer in raw bronze silver docs; do
             rclone copy "data/$layer" "$REMOTE/$layer" --transfers 8
           done
 
