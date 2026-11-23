@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 from datetime import datetime, timezone
 
 import pandas as pd
 
-from psdata import catalog, store
+from psdata import catalog, profile, store
 from psdata.catalog import Series
 from psdata.paths import bronze_path, reference_path, silver_dir
 from psdata.sources import FETCHERS, REFERENCES
@@ -95,6 +97,8 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
     - ``panel.parquet``        国をまたぐ系列（1 行は series_id / country / date で決まる）
     - ``series.parquet``       カタログ（両方の系列）
     - ``countries.parquet``    国・地域の一覧（パネルの国コードを引く表）
+    - ``profile.parquet``      系列ごとの特徴（実物から自動で作る。``psdata.profile``）
+    - ``manifest.json``        この silver を作った時刻・コードの版・実行者・件数
     """
     single, panel = _frames(series)
     obs = _concat(single, ["series_id", "date"])
@@ -110,4 +114,39 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
     if refs:
         # 配信元が増えたら先に載っている方を優先する（今は世界銀行だけ）
         pd.concat(refs, ignore_index=True).drop_duplicates("country").to_parquet(out / "countries.parquet", index=False)
+    prof = profile.build(series)
+    prof.to_parquet(out / "profile.parquet", index=False)
+    _write_manifest(out, obs, pan, table, prof)
     return obs, pan, table
+
+
+#: silver の形の版。列や意味を変えたら上げて、利用側へ先に知らせる
+SCHEMA_VERSION = 1
+
+
+def _git_sha() -> str:
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True,
+            cwd=os.path.dirname(__file__),
+        ).stdout.strip()
+    except Exception:
+        return ""
+
+
+def _write_manifest(out, obs, pan, table, prof) -> None:
+    """silver 全体の記録票。誰が・いつ・どの版のコードで作ったかと、ファイルごとの件数。"""
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "git_sha": _git_sha(),
+        "built_by": {"actor": "ci" if run_id else "local", "ci_run_id": run_id},
+        "files": {
+            "observations.parquet": {"rows": len(obs), "series": int(obs["series_id"].nunique())},
+            "panel.parquet": {"rows": len(pan), "series": int(pan["series_id"].nunique())},
+            "series.parquet": {"rows": len(table)},
+            "profile.parquet": {"rows": len(prof), "stale": prof.loc[prof["is_stale"], "series_id"].tolist()},
+        },
+    }
+    (out / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

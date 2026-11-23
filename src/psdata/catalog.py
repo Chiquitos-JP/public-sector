@@ -21,6 +21,9 @@ from psdata.paths import CATALOG_DIR
 TIERS = {"stocked", "on_demand"}
 FREQS = {"D", "W", "M", "Q", "A"}
 PANEL = "ALL"
+#: 頻度ごとに、最終日がこれより古ければ「古い」とする日数（公表の遅れを見込んだ値）。
+#: 年次は日付が年の初日で、財政などは公表が 2 年ほど遅れるので長めにとる
+MAX_STALE_DAYS = {"D": 10, "W": 21, "M": 90, "Q": 150, "A": 1200}
 _WINDOW_RE = re.compile(r"^(\d+)([DWMY])$")
 
 

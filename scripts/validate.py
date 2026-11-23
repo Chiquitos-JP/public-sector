@@ -12,9 +12,7 @@ import pandas as pd
 from psdata import catalog, store
 from psdata.paths import bronze_path, silver_dir
 
-#: 頻度ごとに、最終日がこれより古ければ警告する日数（公表の遅れを見込んだ値）。
-#: 年次は日付が年の初日で、財政などは公表が 2 年ほど遅れるので長めにとる
-MAX_STALE_DAYS = {"D": 10, "W": 21, "M": 90, "Q": 150, "A": 1200}
+MAX_STALE_DAYS = catalog.MAX_STALE_DAYS
 
 
 def main() -> int:

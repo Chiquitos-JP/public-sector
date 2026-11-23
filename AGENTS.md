@@ -31,6 +31,11 @@ data/                      git に入れない
 - `silver/panel.parquet` — 国をまたぐ系列（`country: ALL`）。列は同じで、1 行は `series_id / country / date`
 - `silver/series.parquet` — カタログ（クレジット・ライセンス）
 - `silver/countries.parquet` — 国・地域の一覧（世界銀行の地域・所得区分・集計値かどうか）
+- `silver/profile.parquet` — 系列ごとの特徴。実物から毎回自動で作る（期間・欠けた期間・最大の空き・値域・1 期の変化幅・公表の遅れ・改定の回数と最大幅・鮮度）
+- `silver/manifest.json` — silver を作った時刻・コードの版（git）・実行者（CI の run id か手元か）・ファイルごとの件数・`schema_version`
+
+カタログ（`definition` / `notes` / `source_url` など）は手で書く**宣言**、プロファイルは実データの**観察**。
+鮮度は `profile.parquet` の `last_observation_date`（データの最後の日付）で見る。`last_checked_at` は最後に取り直して確かめた時刻、`last_changed_at` は最後に値が変わった時刻
 
 系列 id は `<配信元>.<元のコード>`。`country` は ISO3、`date` は期間の開始日。
 パネルの bronze は `country / date / value / fetched_at`。国の一覧（`bronze/<配信元>/_countries.parquet`）は系列ではないので取るたびに置き換える。
@@ -78,6 +83,8 @@ client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])  # ISO3
 client.catalog()
 client.countries()
 client.groups()
+client.profile("fred.UNRATE")   # 系列ごとの特徴
+client.manifest()
 print(client.describe("wb.FP.CPI.TOTL.ZG"))  # 何を測っているか・前提・出典
 ```
 
