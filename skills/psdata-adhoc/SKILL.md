@@ -20,8 +20,8 @@ description: 公開統計（public-sector の psdata）から、目的に合わ�
 
 次の 4 つを決める。分からないものだけ聞き、決めた内容を一行で返してから進む。
 
-- **問い**: 何を示したいか（例: 中米の成長と物価の推移を比べる）
-- **切り口**: 系列・国（ISO3 / `central_america` などのグループ / `region:LCN`・`income:LMC`）・期間
+- **問い**: 何を示したいか（例: G7 の成長と物価の推移を比べる）
+- **切り口**: 系列・国（ISO3 / `g7` などのグループ / `region:LCN`・`income:LMC`）・期間
 - **値の種類**: `value`（元の値）/ `yoy_pct`（前年同期比 %）/ `yoy_diff`（前年同期差）/ `pop_pct` / `pop_diff`。
   **率の系列（成長率・失業率・金利・GDP 比）は `yoy_pct` ではなく `yoy_diff`**
 - **出力**: 表（Excel / CSV）だけか、資料（pptx・HTML・グラフ）までか
@@ -44,11 +44,11 @@ client.groups()                             # 名前付きの国の組み合わ�
 ```python
 df = client.extract(
     ["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"],
-    countries="central_america", start="2015-01-01",
+    countries="g7", start="2015-01-01",
     measures=["value"],
     # as_of="2026-12-01",  # 再現したい時点があれば（2026-11-23 より前は不可）
 )
-files = client.export(df, "exports/20261123-central-america-macro/data.xlsx")
+files = client.export(df, "exports/20261123-g7-macro/data.xlsx")
 ```
 
 - 表は tidy（1 行 = 1 観測）: `series_id / title_ja / country / country_name / date / period / measure / value / unit`

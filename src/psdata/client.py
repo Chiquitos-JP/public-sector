@@ -3,7 +3,7 @@
     from psdata import client
     client.read("fred.UNRATE")                                   # date / value
     client.read(["fred.UNRATE", "fred.CPIAUCSL"], start="2020-01-01")  # 縦長
-    client.read("wb.NY.GDP.MKTP.KD.ZG", countries="central_america")   # 国をまたぐ系列
+    client.read("wb.NY.GDP.MKTP.KD.ZG", countries="g7")   # 国をまたぐ系列
     client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])
     client.catalog()                                              # 系列の定義・クレジット・ライセンス
     client.countries()                                            # 国・地域の一覧（地域・所得区分）
@@ -13,7 +13,7 @@
     client.search("school enrollment")                            # 取得元の指標を探す（世界銀行。FRED は API キーがあれば）
     client.pull("wb.SE.PRM.ENRR")                                 # カタログに無い系列をその場で取る（手元にだけ置く）
     print(client.draft("wb.SE.PRM.ENRR"))                         # 常備に上げるときのカタログの下書き
-    df = client.extract(["wb.NY.GDP.MKTP.KD.ZG"], countries="central_america", measures=["value"])  # 目的に合わせた tidy な表
+    df = client.extract(["wb.NY.GDP.MKTP.KD.ZG"], countries="g7", measures=["value"])  # 目的に合わせた tidy な表
     client.export(df, "out/macro.xlsx")                           # データカード（出典・定義・前提）付きで書き出す
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数

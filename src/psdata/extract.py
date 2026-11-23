@@ -1,9 +1,9 @@
 """目的に合わせた切り出し（tidy な表）と、データカード付きの書き出し。
 
-    df = client.extract(["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"], countries="central_america",
+    df = client.extract(["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"], countries="g7",
                         start="2015-01-01", measures=["value"])
-    client.export(df, "out/central_america_macro.xlsx")   # data・card の 2 シート
-    client.export(df, "out/central_america_macro.csv")    # CSV ＋ .card.md ＋ .card.json
+    client.export(df, "out/g7_macro.xlsx")   # data・card の 2 シート
+    client.export(df, "out/g7_macro.csv")    # CSV ＋ .card.md ＋ .card.json
 
 ## 表の形（tidy: 1 行 = 1 観測、1 列 = 1 つの意味）
 

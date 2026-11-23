@@ -69,7 +69,7 @@ data/                      git に入れない
 ## 目的に合わせて切り出す（アドホックな利用）
 
 ```python
-df = client.extract(["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"], countries="central_america",
+df = client.extract(["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"], countries="g7",
                     start="2015-01-01", measures=["value", "yoy_diff"])   # tidy: 1 行 = 1 観測
 client.export(df, "exports/20261123-ca/data.xlsx")   # .xlsx / .csv / .parquet ＋ .card.md / .card.json
 client.to_wide(df, columns="country")                 # 横持ち（表・グラフ用）
@@ -103,7 +103,7 @@ python3 -m venv .venv-mac && .venv-mac/bin/python3 -m pip install -e '.[dev]'
 from psdata import client
 client.read("fred.UNRATE")
 client.read(["fred.CPIAUCSL", "boj.FM08.FXERD04"], start="2020-01-01")
-client.read("wb.NY.GDP.MKTP.KD.ZG", countries="central_america")          # groups.yml の名前
+client.read("wb.NY.GDP.MKTP.KD.ZG", countries="g7")          # groups.yml の名前
 client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])  # ISO3・世界銀行の区分を混ぜてよい
 client.catalog()
 client.countries()
