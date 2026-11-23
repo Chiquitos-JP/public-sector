@@ -151,7 +151,7 @@ def build_silver(series: list[Series], sources: dict) -> tuple[pd.DataFrame, pd.
 
 
 #: silver の形の版。列や意味を変えたら上げて、利用側へ先に知らせる
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2: series.parquet に単位の列（unit_kind / unit_of / currency / scale / price_basis）
 
 
 def _git_sha() -> str:

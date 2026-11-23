@@ -23,7 +23,8 @@ description: 公開統計（public-sector の psdata）から、目的に合わ�
 - **問い**: 何を示したいか（例: G7 の成長と物価の推移を比べる）
 - **切り口**: 系列・国（ISO3 / `g7` などのグループ / `region:LCN`・`income:LMC`）・期間
 - **値の種類**: `value`（元の値）/ `yoy_pct`（前年同期比 %）/ `yoy_diff`（前年同期差）/ `pop_pct` / `pop_diff`。
-  **率の系列（成長率・失業率・金利・GDP 比）は `yoy_pct` ではなく `yoy_diff`**
+  **率の系列（成長率・失業率・金利・GDP 比）は `yoy_pct` ではなく `yoy_diff`**（`unit_kind` が `percent` の系列。求めると警告が出る）
+- **単位**: 表の `unit_kind` / `currency` / `scale` を見る。金額を足し合わせたり比べたりするときは `base_units=True` で倍率をそろえる（M2 は十億ドル、FRB の総資産は百万ドル）
 - **出力**: 表（Excel / CSV）だけか、資料（pptx・HTML・グラフ）までか
 
 ## 2. 系列を選ぶ

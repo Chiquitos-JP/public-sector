@@ -14,6 +14,7 @@
   country: USA
   freq: M
   unit: "%"
+  unit_kind: percent
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 1Y
@@ -36,6 +37,8 @@
   country: USA
   freq: M
   unit: "%"
+  unit_kind: percent
+  unit_of: "labor_force"
   seasonal_adjustment: SA
   tier: stocked
   refetch_window: 5Y
@@ -58,6 +61,8 @@
   country: USA
   freq: M
   unit: 指数（1982-84=100）
+  unit_kind: index
+  unit_of: "1982-84=100"
   seasonal_adjustment: SA
   tier: stocked
   refetch_window: 5Y
@@ -79,6 +84,10 @@
   country: USA
   freq: M
   unit: 十億ドル
+  unit_kind: currency
+  currency: USD
+  scale: 9
+  price_basis: nominal
   seasonal_adjustment: SA
   tier: stocked
   refetch_window: 5Y
@@ -99,6 +108,10 @@
   country: USA
   freq: W
   unit: 百万ドル
+  unit_kind: currency
+  currency: USD
+  scale: 6
+  price_basis: nominal
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 8W
@@ -119,6 +132,7 @@
   country: USA
   freq: D
   unit: "%"
+  unit_kind: percent
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 10D
@@ -139,6 +153,9 @@
   country: JPN
   freq: D
   unit: 円/ドル
+  unit_kind: fx
+  unit_of: "JPY/USD"
+  currency: JPY
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 10D

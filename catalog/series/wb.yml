@@ -15,6 +15,8 @@
   country: ALL
   freq: A
   unit: "%"
+  unit_kind: percent
+  price_basis: real
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -37,6 +39,10 @@
   country: ALL
   freq: A
   unit: "米ドル"
+  unit_kind: currency
+  unit_of: "per_capita"
+  currency: USD
+  price_basis: nominal
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -59,6 +65,9 @@
   country: ALL
   freq: A
   unit: "米ドル"
+  unit_kind: currency
+  currency: USD
+  price_basis: nominal
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -82,6 +91,7 @@
   country: ALL
   freq: A
   unit: "%"
+  unit_kind: percent
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -105,6 +115,8 @@
   country: ALL
   freq: A
   unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -129,6 +141,8 @@
   country: ALL
   freq: A
   unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -153,6 +167,8 @@
   country: ALL
   freq: A
   unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -176,6 +192,8 @@
   country: ALL
   freq: A
   unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -199,6 +217,8 @@
   country: ALL
   freq: A
   unit: "% of GDP"
+  unit_kind: percent
+  unit_of: "GDP"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -222,6 +242,8 @@
   country: ALL
   freq: A
   unit: "% of GNI"
+  unit_kind: percent
+  unit_of: "GNI"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -244,6 +266,8 @@
   country: ALL
   freq: A
   unit: "人"
+  unit_kind: count
+  unit_of: "persons"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -268,6 +292,8 @@
   country: ALL
   freq: A
   unit: "% of population"
+  unit_kind: percent
+  unit_of: "population"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y
@@ -291,6 +317,8 @@
   country: ALL
   freq: A
   unit: "% of labor force"
+  unit_kind: percent
+  unit_of: "labor_force"
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 70Y

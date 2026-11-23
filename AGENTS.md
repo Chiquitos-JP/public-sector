@@ -52,7 +52,7 @@ data/                      git に入れない
 ## 系列の追加
 
 1. 作成元が `catalog/sources.yml` に無ければ追加する
-2. `catalog/series/<配信元>.yml` に定義を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
+2. `catalog/series/<配信元>.yml` に定義を書く。単位は表示用の `unit` とは別に、機械が読む `unit_kind`（percent / index / currency / fx / count）・`unit_of`（% なら何に対する比、指数なら基準、為替なら通貨の組）・`currency`（ISO 4217）・`scale`（10 の何乗か。十億 = 9）・`price_basis`（nominal / real）を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
 3. 新しい配信元は `src/psdata/sources/<配信元>.py` に `fetch(series, start)` を書き、`FETCHERS` に登録する
 4. `scripts/validate.py` と `pytest` を通す
 
@@ -88,7 +88,7 @@ client.export(df, "exports/20261123-ca/data.xlsx")   # .xlsx / .csv / .parquet �
 client.to_wide(df, columns="country")                 # 横持ち（表・グラフ用）
 ```
 
-- 列: `series_id / title_ja / country / country_name / date / period / measure / value / unit`
+- 列: `series_id / title_ja / country / country_name / date / period / measure / value / unit / unit_kind / currency / scale`。率の系列の差（`yoy_diff`）の単位はポイント。`base_units=True` で倍率を値に掛けて 1 単位（1 ドルなど）にそろえる
 - `measure`: `value` / `yoy_pct` / `yoy_diff` / `pop_pct` / `pop_diff`（定義は `src/psdata/extract.py`。基準は観測日で今日ではない。前の値が無ければ空で、0 で埋めない）
 - データカードに出典・クレジット・ライセンス・定義・前提・鮮度・切り出しの条件が入る。外で使うときは `credits` を出典として書く
 - AI に目的を伝えて資料（pptx・HTML・グラフ）まで作るときの手順はスキル `skills/psdata-adhoc/SKILL.md`（`~/.claude/skills/psdata-adhoc` にリンクして使う）

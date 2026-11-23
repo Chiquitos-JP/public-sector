@@ -211,11 +211,16 @@ def extract(
     as_of: str | pd.Timestamp | None = None,
     measures: list[str] | tuple[str, ...] = ("value",),
     dropna: bool = True,
+    base_units: bool = False,
 ) -> pd.DataFrame:
     """目的に合わせて切り出した tidy な表（1 行 = 1 観測）。列と measure の定義は ``psdata.extract``。
 
     前年比などは期間を絞る前の全履歴から計算するので、``start`` の最初の年も前年比が出る。
+    ``base_units=True`` なら倍率（scale）を値に掛けて 1 単位（1 ドルなど）にそろえる。
+    率の系列に変化率（yoy_pct など）を求めると警告し、データカードにも残す。
     """
+    import warnings as _warnings
+
     from psdata import extract as _extract
 
     ids = [series_id] if isinstance(series_id, str) else list(series_id)
@@ -227,12 +232,17 @@ def extract(
         row = catalog().set_index("series_id").loc[ids[0]]
         obs = obs.assign(series_id=ids[0], country=row["country"])
     path = silver_dir() / "countries.parquet"
-    df = _extract.tidy(obs, catalog(), pd.read_parquet(path) if path.is_file() else None, list(measures), dropna)
+    cat = catalog()
+    df = _extract.tidy(obs, cat, pd.read_parquet(path) if path.is_file() else None, list(measures), dropna, base_units)
+    notes = _extract.unit_warnings(cat, ids, list(measures))
+    for n in notes:
+        _warnings.warn(n, stacklevel=2)
     if start:
         df = df[df["date"] >= pd.Timestamp(start)].reset_index(drop=True)
     df.attrs["query"] = {
         "series": ids, "countries": countries, "start": start, "end": end,
         "as_of": None if as_of is None else str(as_of), "measures": list(measures),
+        "base_units": base_units, "warnings": notes,
     }
     return df
 

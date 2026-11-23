@@ -35,7 +35,7 @@ def env(tmp_path, monkeypatch):
 
 def test_tidy_columns_and_yoy_skips_missing_base(env):
     df = client.extract("fred.CPIAUCSL", measures=["value", "yoy_pct"])
-    assert list(df.columns) == ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit"]
+    assert list(df.columns) == ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit", "unit_kind", "currency", "scale"]
     yoy = df[df["measure"] == "yoy_pct"].set_index("period")["value"]
     assert "2024-12" not in yoy.index  # 1 年前が無い
     assert round(yoy["2025-01"], 6) == round((112 / 100 - 1) * 100, 6)
@@ -78,3 +78,36 @@ def test_to_wide(env):
     df = client.extract("wb.NY.GDP.MKTP.KD.ZG", measures=["value"])
     wide = client.to_wide(df, columns="country")
     assert {"GTM", "MEX", "date", "period"} <= set(wide.columns)
+
+
+def test_units_points_scale_and_warning(env, monkeypatch):
+    import warnings
+
+    # 率の系列の差は「ポイント」、変化率を求めると警告してカードにも残す
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        df = client.extract("wb.NY.GDP.MKTP.KD.ZG", measures=["value", "yoy_diff", "yoy_pct"])
+    assert any("yoy_diff" in str(x.message) for x in w)
+    assert df.loc[df["measure"] == "yoy_diff", "unit"].unique().tolist() == ["ポイント"]
+    assert df.attrs["query"]["warnings"]
+    assert df["unit_kind"].unique().tolist() == ["percent"]
+
+
+def test_base_units_multiplies_scale(env, monkeypatch):
+    from psdata import catalog as cat_mod
+
+    cat = client.catalog()
+    cat.loc[cat["series_id"] == "fred.CPIAUCSL", ["unit_kind", "currency", "scale"]] = ["currency", "USD", 9]
+    monkeypatch.setattr(client, "catalog", lambda: cat)
+    raw = client.extract("fred.CPIAUCSL", measures=["value"])
+    base = client.extract("fred.CPIAUCSL", measures=["value"], base_units=True)
+    assert raw["scale"].iloc[0] == 9 and base["scale"].iloc[0] == 0
+    assert base["value"].iloc[0] == raw["value"].iloc[0] * 1e9 and base["unit"].iloc[0] == "USD"
+
+
+def test_bad_unit_fields_are_rejected():
+    from dataclasses import replace
+
+    s = next(x for x in catalog.load_series() if x.id == "fred.M2SL")
+    errors = catalog.validate([replace(s, unit_kind="money"), replace(s, id="fred.M2X", currency="")], catalog.load_sources())
+    assert any("unit_kind" in e for e in errors) and any("currency" in e for e in errors)

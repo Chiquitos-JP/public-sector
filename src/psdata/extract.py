@@ -111,12 +111,28 @@ def tidy(
     countries: pd.DataFrame | None,
     measures: list[str],
     dropna: bool,
+    base_units: bool = False,
 ) -> pd.DataFrame:
     meta = cat.set_index("series_id")
     df = add_measures(obs, meta["freq"].to_dict(), measures)
     df["title_ja"] = df["series_id"].map(meta["title_ja"])
+    kind = df["series_id"].map(meta["unit_kind"]).astype("string")
+    level = df["measure"].isin(["value", "yoy_diff", "pop_diff"])
+    diff = df["measure"].isin(["yoy_diff", "pop_diff"])
+    # 表示の単位: 率の系列の差は「ポイント」、比（%）の measure は「%」
     unit = df["series_id"].map(meta["unit"]).astype("string")
-    df["unit"] = unit.where(df["measure"].isin(["value", "yoy_diff", "pop_diff"]), "%")
+    df["unit"] = unit.where(level, "%").where(~(diff & (kind == "percent")), "ポイント")
+    # 機械が読む単位: 比（%）の measure は percent・倍率なし。それ以外は系列の単位のまま
+    df["unit_kind"] = kind.where(level, "percent")
+    df["currency"] = df["series_id"].map(meta["currency"]).astype("string").where(level, "")
+    df["scale"] = df["series_id"].map(meta["scale"]).fillna(0).astype("int64").where(level, 0)
+    if base_units:
+        # 倍率を値に掛けて、1 単位（1 ドルなど）にそろえる
+        factor = 10.0 ** df["scale"]
+        scaled = df["scale"] != 0
+        df["value"] = df["value"] * factor
+        df.loc[scaled, "unit"] = df.loc[scaled, "currency"].where(df.loc[scaled, "currency"] != "", df.loc[scaled, "unit"])
+        df["scale"] = 0
     df["period"] = pd.concat(
         [_period_label(g["date"], meta.loc[sid, "freq"]) for sid, g in df.groupby("series_id", sort=False)]
     ).reindex(df.index)
@@ -125,8 +141,22 @@ def tidy(
     if dropna:
         # 計算できなかった行（前の期間が無い）だけを落とす。元の値の欠けは元々行が無い
         df = df[df["value"].notna() | (df["measure"] == "value")]
-    cols = ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit"]
+    cols = ["series_id", "title_ja", "country", "country_name", "date", "period", "measure", "value", "unit",
+            "unit_kind", "currency", "scale"]
     return df[cols].sort_values(["series_id", "measure", "country", "date"]).reset_index(drop=True)
+
+
+def unit_warnings(cat: pd.DataFrame, series: list[str], measures: list[str]) -> list[str]:
+    """意味の取りにくい組み合わせ（率の系列の変化率など）を知らせる。"""
+    meta = cat.set_index("series_id")
+    out = []
+    for sid in series:
+        if meta.loc[sid, "unit_kind"] == "percent":
+            for m in ("yoy_pct", "pop_pct"):
+                if m in measures:
+                    diff = m.replace("_pct", "_diff")
+                    out.append(f"{sid} は率（%）の系列なので {m}（率の変化率）は読み違えやすい。差（ポイント）なら {diff}")
+    return out
 
 
 def to_wide(df: pd.DataFrame, columns: str = "series_id") -> pd.DataFrame:
@@ -151,6 +181,11 @@ def card(df: pd.DataFrame, cat: pd.DataFrame, prof: pd.DataFrame | None, query: 
             "title_ja": r["title_ja"],
             "title_en": r["title_en"],
             "unit": r["unit"],
+            "unit_kind": r.get("unit_kind", ""),
+            "unit_of": r.get("unit_of", ""),
+            "currency": r.get("currency", ""),
+            "scale": int(r.get("scale", 0) or 0),
+            "price_basis": r.get("price_basis", ""),
             "freq": r["freq"],
             "seasonal_adjustment": r["seasonal_adjustment"],
             "definition": r.get("definition", ""),
@@ -177,11 +212,15 @@ def card(df: pd.DataFrame, cat: pd.DataFrame, prof: pd.DataFrame | None, query: 
             "period": "期間の表記（年・四半期・月・日）",
             "measure": "値の種類（下の measures）",
             "value": "値",
-            "unit": "単位（measure ごと）",
+            "unit": "表示用の単位（measure ごと。率の系列の差はポイント）",
+            "unit_kind": "単位の種類（percent / index / currency / fx / count）",
+            "currency": "通貨（ISO 4217。金額と為替だけ）",
+            "scale": "倍率（10 の何乗か。9 なら値 × 10^9 が 1 単位の値）",
         },
         "measures_version": MEASURES_VERSION,
         "measures": {m: MEASURES[m] for m in df["measure"].drop_duplicates()},
         "series": series,
+        "warnings": list(query.get("warnings") or []),
         "credits": sorted({s["credit"] for s in series}),
         "licenses": sorted({s["license"] for s in series}),
         "how_to_cite": "使うときは credits をそのまま出典として書く（CC BY・出典明記のライセンスは出典の表示が条件）",
@@ -198,6 +237,7 @@ def card_markdown(c: dict) -> str:
         f"- 国: {q.get('countries') or '指定なし'} / 期間: {q.get('start') or '最初'} 〜 {q.get('end') or '最後'}"
         + (f" / 時点: {q['as_of']} に知り得た値" if q.get("as_of") else ""),
         f"- 値の種類: {', '.join(c['measures'])}",
+        *([""] + [f"- ⚠️ {w}" for w in c["warnings"]] if c.get("warnings") else []),
         "",
         "## 出典（使うときはこのまま書く）",
         "",
@@ -218,7 +258,12 @@ def card_markdown(c: dict) -> str:
             "",
             s["definition"],
             "",
-            f"- 単位: {s['unit']} / 頻度: {s['freq']} / 季節調整: {s['seasonal_adjustment']}",
+            f"- 単位: {s['unit']}（{s['unit_kind']}"
+            + (f"・{s['unit_of']}" if s["unit_of"] else "")
+            + (f"・{s['currency']}" if s["currency"] else "")
+            + (f"・×10^{s['scale']}" if s["scale"] else "")
+            + (f"・{s['price_basis']}" if s["price_basis"] else "")
+            + f"） / 頻度: {s['freq']} / 季節調整: {s['seasonal_adjustment']}",
             f"- 最終の期間: {s.get('last_observation_date', '—')} / 最後に確かめた: {s.get('last_checked_at', '—')}",
             f"- 出典: {s['credit']}（{s['license']}）/ 定義: {s['source_url']}",
         ]

@@ -13,6 +13,9 @@
   country: JPN
   freq: D
   unit: 円/ドル
+  unit_kind: fx
+  unit_of: "JPY/USD"
+  currency: JPY
   seasonal_adjustment: NSA
   tier: stocked
   refetch_window: 10D

@@ -20,6 +20,11 @@ from psdata.paths import CATALOG_DIR
 
 TIERS = {"stocked", "on_demand"}
 FREQS = {"D", "W", "M", "Q", "A"}
+#: 単位の種類（機械が読む）。unit（表示用の文字）とは別に持ち、換算や計算の判断に使う
+#: percent: 率・比率（%）。unit_of に何に対する比か（GDP・labor_force など）／index: 指数（unit_of に基準）／
+#: currency: 金額（currency に ISO 4217、scale に 10 の何乗か）／fx: 為替（unit_of に JPY/USD など）／count: 個数・人数
+UNIT_KINDS = {"percent", "index", "currency", "fx", "count"}
+PRICE_BASES = {"", "nominal", "real"}
 PANEL = "ALL"
 #: 頻度ごとに、最終日がこれより古ければ「古い」とする日数（公表の遅れを見込んだ値）。
 #: 年次は日付が年の初日で、財政などは公表が 2 年ほど遅れるので長めにとる
@@ -42,6 +47,12 @@ class Series:
     refetch_window: str
     start: str
     used_by: tuple[str, ...]
+    #: 単位の種類（UNIT_KINDS）・何に対する値か・通貨（ISO 4217）・10 の何乗か・名目か実質か
+    unit_kind: str = ""
+    unit_of: str = ""
+    currency: str = ""
+    scale: int = 0
+    price_basis: str = ""
     #: 何を測っているか（1〜2 文）
     definition: str = ""
     #: 読むときの大切な前提（季節調整・欠けている期間・定義の変更・比べるときの注意など）
@@ -145,6 +156,16 @@ def validate(series: list[Series], sources: dict) -> list[str]:
             errors.append(f"{pre} 配信元 {s.distributor!r} が sources.yml の distributors に無い")
         if not s.used_by:
             errors.append(f"{pre} used_by が空（基準 3: 利用先の無い系列は持たない）")
+        if s.unit_kind not in UNIT_KINDS:
+            errors.append(f"{pre} unit_kind {s.unit_kind!r} は {sorted(UNIT_KINDS)} のいずれか")
+        if s.unit_kind in {"currency", "fx"} and not re.fullmatch(r"[A-Z]{3}", s.currency or ""):
+            errors.append(f"{pre} unit_kind {s.unit_kind} には currency（ISO 4217 の 3 文字）が要る")
+        if s.unit_kind in {"index", "fx"} and not s.unit_of:
+            errors.append(f"{pre} unit_kind {s.unit_kind} には unit_of（指数の基準・通貨の組）が要る")
+        if not isinstance(s.scale, int) or not -3 <= s.scale <= 15:
+            errors.append(f"{pre} scale は 10 の何乗かの整数（例: 十億 = 9）")
+        if s.price_basis not in PRICE_BASES:
+            errors.append(f"{pre} price_basis は nominal / real / 空")
         if not s.definition.strip():
             errors.append(f"{pre} definition が空（何を測っているかを書く）")
         if not s.source_url.startswith("https://"):
@@ -181,6 +202,11 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "country": s.country,
                 "freq": s.freq,
                 "unit": s.unit,
+                "unit_kind": s.unit_kind,
+                "unit_of": s.unit_of,
+                "currency": s.currency,
+                "scale": s.scale,
+                "price_basis": s.price_basis,
                 "seasonal_adjustment": s.seasonal_adjustment,
                 "creator": c["name"],
                 "license": c["license"],
