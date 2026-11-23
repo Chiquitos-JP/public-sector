@@ -13,6 +13,10 @@ on:
         description: "定義上の開始日から全期間を取り直す"
         type: boolean
         default: false
+      ids:
+        description: "取り直す系列 id（空白区切り。空なら常備の全系列。指定した系列は週 1 回・月 1 回の間隔にかかわらず取る）"
+        type: string
+        default: ""
 
 concurrency:
   group: fetch
@@ -62,11 +66,14 @@ jobs:
 
       - name: Fetch
         id: fetch
+        env:
+          IDS: ${{ inputs.ids }}
         # 公開ログには件数だけを出し、詳細は保存先の logs/ に置く
         run: |
           mkdir -p logs
           set +e
-          python scripts/fetch.py ${{ inputs.full && '--full' || '' }} > logs/fetch.log 2>&1
+          # ids は env 経由で渡す（入力をそのままシェルに埋め込まない）。空白で分けて引数にする
+          python scripts/fetch.py ${{ inputs.full && '--full' || '' }} $IDS > logs/fetch.log 2>&1
           rc=$?
           set -e
           echo "rc=$rc" >> "$GITHUB_OUTPUT"

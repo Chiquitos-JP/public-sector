@@ -123,6 +123,10 @@ python3 -m venv .venv-mac && .venv-mac/bin/python3 -m pip install -e '.[dev]'
 ## 保存先と定期取得
 
 - 保存先は Cloudflare R2（非公開）。**書くのは `.github/workflows/fetch.yml` だけ**。手元からは書かない
+- **今すぐ最新にしたいとき**は CI を手で動かす（手元からは書かない）:
+  `gh workflow run fetch.yml`（常備の全系列。週 1 回・月 1 回の系列は間隔が来ていなければ飛ばす）/
+  `gh workflow run fetch.yml -f ids="wb.NY.GDP.MKTP.KD.ZG imf.NGDP_RPCH"`（指定した系列を間隔にかかわらず取る）/
+  `gh workflow run fetch.yml -f full=true`（全系列を全期間）。終わったら `./data_sync.sh pull`、または `client.sql(..., source="r2")` で直接読む
 - 手元へは `./data_sync.sh pull`（rclone remote `r2ps:`）
 - CI の公開ログは成否と件数だけ。詳細は保存先の `logs/`
 
