@@ -1,0 +1,234 @@
+# 世界銀行 World Development Indicators の系列。id は wb.<指標コード>
+# どれも国をまたぐパネル（country: ALL）。全ての国・地域を取り、比べる国は利用側で選ぶ（catalog/groups.yml）
+# 年次で更新が少ないので週 1 回だけ取り、毎回全期間を取り直す（過去の年も改定されるため）
+
+- id: wb.NY.GDP.MKTP.KD.ZG
+  title_ja: 実質 GDP 成長率
+  title_en: "GDP growth (annual %)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "%"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.NY.GDP.PCAP.CD
+  title_ja: 1 人当たり GDP（名目・米ドル）
+  title_en: "GDP per capita (current US$)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "米ドル"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.NY.GDP.MKTP.CD
+  title_ja: 名目 GDP（米ドル）
+  title_en: "GDP (current US$)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "米ドル"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.FP.CPI.TOTL.ZG
+  title_ja: 消費者物価上昇率
+  title_en: "Inflation, consumer prices (annual %)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "%"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "IMF, International Financial Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.GC.NLD.TOTL.GD.ZS
+  title_ja: 財政収支（純貸出・純借入、GDP 比）
+  title_en: "Net lending (+) / net borrowing (-) (% of GDP)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "IMF, Government Finance Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.GC.REV.XGRT.GD.ZS
+  title_ja: 歳入（贈与を除く、GDP 比）
+  title_en: "Revenue, excluding grants (% of GDP)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "IMF, Government Finance Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.GC.DOD.TOTL.GD.ZS
+  title_ja: 中央政府債務（GDP 比）
+  title_en: "Central government debt, total (% of GDP)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "IMF, Government Finance Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.BN.CAB.XOKA.GD.ZS
+  title_ja: 経常収支（GDP 比）
+  title_en: "Current account balance (% of GDP)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "IMF, Balance of Payments Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.BX.TRF.PWKR.DT.GD.ZS
+  title_ja: 個人送金の受け取り（GDP 比）
+  title_en: "Personal remittances, received (% of GDP)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GDP"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "World Bank staff estimates based on IMF balance of payments data"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.DT.DOD.DECT.GN.ZS
+  title_ja: 対外債務残高（GNI 比）
+  title_en: "External debt stocks (% of GNI)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of GNI"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "World Bank, International Debt Statistics"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.SP.POP.TOTL
+  title_ja: 総人口
+  title_en: "Population, total"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "人"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "UN, World Population Prospects"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.SI.POV.DDAY
+  title_ja: 貧困率（1 日 3.00 ドル未満・2021 年 PPP）
+  title_en: "Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of population"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "World Bank, Poverty and Inequality Platform"
+  used_by:
+    - u04
+    - u05
+
+- id: wb.SL.UEM.TOTL.ZS
+  title_ja: 失業率（ILO 推計）
+  title_en: "Unemployment, total (% of total labor force) (modeled ILO estimate)"
+  creator: worldbank
+  distributor: wb
+  country: ALL
+  freq: A
+  unit: "% of labor force"
+  seasonal_adjustment: NSA
+  tier: stocked
+  refetch_window: 70Y
+  fetch_every: 7D
+  start: "1960-01-01"
+  original_source: "ILO, Modelled Estimates"
+  used_by:
+    - u04
+    - u05

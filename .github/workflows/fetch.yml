@@ -25,7 +25,7 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       RCLONE_CONFIG_PS_TYPE: s3

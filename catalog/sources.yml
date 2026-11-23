@@ -5,6 +5,7 @@
 allowed_licenses:
   public-domain: 米連邦政府の著作物など。著作権の制約なし
   attribution: 出典を明記すれば複製・転載・加工してよい
+  cc-by-4.0: Creative Commons 表示 4.0。出典を明記すれば商用を含め複製・加工・再配布してよい
 
 # 作成元（基準 1: 公的機関であること）
 creators:
@@ -23,6 +24,11 @@ creators:
     kind: central_bank
     license: attribution
     credit: "出所：日本銀行「時系列統計データ」"
+  worldbank:
+    name: The World Bank
+    kind: international_organization
+    license: cc-by-4.0
+    credit: "The World Bank: World Development Indicators (CC BY 4.0)"
 
 # 配信元（取得の経路。作成元とは別に扱う）
 distributors:
@@ -32,3 +38,6 @@ distributors:
   boj:
     name: 日本銀行 時系列統計データ検索サイト API
     url: https://www.stat-search.boj.or.jp/
+  wb:
+    name: World Bank Indicators API
+    url: https://data.worldbank.org/

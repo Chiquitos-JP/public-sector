@@ -5,6 +5,8 @@
     python3 scripts/fetch.py fred.UNRATE     # 指定した系列だけ
     python3 scripts/fetch.py --full          # 定義上の開始日から全部取り直す
 
+``fetch_every`` のある系列は、前回の取得から間隔が空いたときだけ取る（id を指定したときと --full は常に取る）。
+
 終了コード: 0 = すべて成功 / 1 = カタログ違反・取得失敗・検証エラーのいずれかがあった
 （失敗した系列の既存データは書き換えない）
 """
@@ -36,9 +38,24 @@ def main() -> int:
     if unknown:
         print(f"❌ カタログに無い系列: {unknown}")
         return 1
-    targets = [by_id[i] for i in args.ids] if args.ids else [s for s in series if s.tier == "stocked"]
+    if args.ids:
+        targets = [by_id[i] for i in args.ids]
+    else:
+        stocked = [s for s in series if s.tier == "stocked"]
+        targets = stocked if args.full else [s for s in stocked if pipeline.is_due(s)]
+        skipped = len(stocked) - len(targets)
+        if skipped:
+            print(f"  ⏭️ 間隔に達していない {skipped} 系列は取らない")
 
     failed = 0
+    panel_sources = {s.distributor for s in targets if s.is_panel}
+    if panel_sources:
+        try:
+            for d, n in pipeline.refresh_references(panel_sources).items():
+                print(f"  ✅ {d} 国の一覧 — {n} 件")
+        except Exception as e:  # 国の一覧が取れなくても系列の取得は続ける（前回の一覧を使う）
+            print(f"  ❌ 国の一覧の取得に失敗: {e}")
+            failed += 1
     for s in targets:
         try:
             res = pipeline.refresh(s, full=args.full)
@@ -56,8 +73,8 @@ def main() -> int:
             continue
         print(f"  ✅ {s.id} — 追加 {res.rows_added} / 改定 {res.rows_revised} / 計 {res.rows_after} 行（〜{res.date_max}）")
 
-    obs, table = pipeline.build_silver(series, sources)
-    print(f"silver: {len(obs)} 行 / {obs['series_id'].nunique()} 系列")
+    obs, pan, table = pipeline.build_silver(series, sources)
+    print(f"silver: 単一 {len(obs)} 行 / {obs['series_id'].nunique()} 系列、パネル {len(pan)} 行 / {pan['series_id'].nunique()} 系列")
     return 1 if failed else 0
 
 

@@ -10,8 +10,10 @@
 
 ## ファイル
 
-- ``<id>.parquet``             列: date / value / fetched_at（その値を取得した時刻・UTC）
+- ``<id>.parquet``             列: date / value / fetched_at（その値を最後に書き換えた時刻・UTC）
 - ``<id>.revisions.parquet``   列: date / old_value / new_value / detected_at
+
+国をまたぐ系列（パネル）は ``keys=("country", "date")`` で扱い、どのファイルにも ``country`` 列が付く。
 - ``<id>.parquet.provenance.json``  取得ごとの出所・パラメータ・件数・検証結果
 """
 from __future__ import annotations
@@ -80,8 +82,11 @@ def fetch_start(path: Path, *, default_start: str, window: pd.DateOffset) -> str
     return max(start, pd.Timestamp(default_start)).date().isoformat()
 
 
-def _normalize(fresh: pd.DataFrame) -> pd.DataFrame:
-    out = fresh[["date", "value"]].copy()
+def _normalize(fresh: pd.DataFrame, keys: tuple[str, ...]) -> pd.DataFrame:
+    out = fresh[[*keys, "value"]].copy()
+    for k in keys:
+        if k != "date":
+            out[k] = out[k].astype("string")
     d = pd.to_datetime(out["date"])
     if getattr(d.dtype, "tz", None) is not None:
         d = d.dt.tz_localize(None)
@@ -96,8 +101,12 @@ def validate_frame(
     label: str,
     max_abs_pct_change: float | None = None,
     allow_future_days: int = 1,
+    keys: tuple[str, ...] = ("date",),
 ) -> Report:
-    """構造の検証。errors は書き込みを止める。warnings は記録して続ける。"""
+    """構造の検証。errors は書き込みを止める。warnings は記録して続ける。
+
+    ``keys`` は 1 行を決める列（単一系列は date、パネルは country / date）。重複と並び順はこの単位で見る。
+    """
     rep = Report()
     if df is None or df.empty:
         rep.errors.append(f"{label}: 空のデータ")
@@ -105,9 +114,18 @@ def validate_frame(
     dates = pd.to_datetime(df["date"])
     if dates.isna().any():
         rep.errors.append(f"{label}: 日付が欠けた行がある ({int(dates.isna().sum())} 行)")
-    if dates.duplicated().any():
-        rep.errors.append(f"{label}: 日付が重複している ({int(dates.duplicated().sum())} 行)")
-    if not dates.dropna().is_monotonic_increasing:
+    other = [k for k in keys if k != "date"]
+    for k in other:
+        if df[k].isna().any():
+            rep.errors.append(f"{label}: {k} が欠けた行がある ({int(df[k].isna().sum())} 行)")
+    dup = df.duplicated(list(keys))
+    if dup.any():
+        rep.errors.append(f"{label}: {'・'.join(keys)} が重複している ({int(dup.sum())} 行)")
+    if other:
+        k = df[list(keys)].reset_index(drop=True)
+        if not k.equals(k.sort_values(list(keys)).reset_index(drop=True)):
+            rep.errors.append(f"{label}: {'・'.join(keys)} の昇順でない")
+    elif not dates.dropna().is_monotonic_increasing:
         rep.errors.append(f"{label}: 日付が昇順でない")
     limit = pd.Timestamp.now().normalize() + pd.Timedelta(days=allow_future_days)
     if (dates > limit).any():
@@ -119,7 +137,7 @@ def validate_frame(
         rep.errors.append(f"{label}: 値がすべて欠損")
     elif df["value"].isna().any():
         rep.warnings.append(f"{label}: 値が欠損した行がある ({int(df['value'].isna().sum())} 行)")
-    if max_abs_pct_change is not None and len(df) > 1:
+    if max_abs_pct_change is not None and len(df) > 1 and not other:
         chg = df["value"].pct_change(fill_method=None).abs().dropna()
         n = int((chg > max_abs_pct_change).sum())
         if n:
@@ -146,16 +164,18 @@ def update(
     max_abs_pct_change: float | None = 1.0,
     revision_warn_pct: float = 0.05,
     label: str | None = None,
+    keys: tuple[str, ...] = ("date",),
 ) -> UpdateResult:
-    """``start`` 以降を取り直した ``fresh``（date / value）でストアを更新する。"""
+    """``start`` 以降を取り直した ``fresh``（keys / value）でストアを更新する。"""
     path = Path(path)
     name = label or path.stem
     now = pd.Timestamp(datetime.now(timezone.utc))
     start_ts = pd.Timestamp(start)
 
-    fresh_n = _normalize(fresh)
-    fresh_n = fresh_n[fresh_n["date"] >= start_ts].sort_values("date").reset_index(drop=True)
-    rep = validate_frame(fresh_n, label=f"{name}/新規", max_abs_pct_change=max_abs_pct_change)
+    keys = tuple(keys)
+    fresh_n = _normalize(fresh, keys)
+    fresh_n = fresh_n[fresh_n["date"] >= start_ts].sort_values(list(keys)).reset_index(drop=True)
+    rep = validate_frame(fresh_n, label=f"{name}/新規", max_abs_pct_change=max_abs_pct_change, keys=keys)
 
     existing = read(path)
     rows_before = 0 if existing is None else len(existing)
@@ -175,12 +195,13 @@ def update(
     if not rep.ok:
         return _result(False, None)
 
-    revisions = pd.DataFrame(columns=["date", "old_value", "new_value", "detected_at"])
+    revisions = pd.DataFrame(columns=[*keys, "old_value", "new_value", "detected_at"])
     if existing is None:
         merged = fresh_n.assign(fetched_at=now)
         added, revised = len(merged), 0
     else:
-        both = existing.merge(fresh_n, on="date", how="outer", suffixes=("_old", "_new"), indicator=True)
+        existing = existing.astype({k: "string" for k in keys if k != "date"})
+        both = existing.merge(fresh_n, on=list(keys), how="outer", suffixes=("_old", "_new"), indicator=True)
         is_new = both["_merge"] == "right_only"
         in_both = both["_merge"] == "both"
         changed = in_both & ~np.isclose(
@@ -194,7 +215,7 @@ def update(
 
         revisions = pd.DataFrame(
             {
-                "date": both.loc[changed, "date"],
+                **{k: both.loc[changed, k] for k in keys},
                 "old_value": both.loc[changed, "value_old"].astype("float64"),
                 "new_value": both.loc[changed, "value_new"].astype("float64"),
                 "detected_at": now,
@@ -211,16 +232,16 @@ def update(
         take_new = is_new | changed
         merged = pd.DataFrame(
             {
-                "date": both["date"],
+                **{k: both[k] for k in keys},
                 "value": both["value_new"].where(take_new, both["value_old"]).astype("float64"),
                 "fetched_at": both["fetched_at"].where(~take_new, now),
             }
         )
-        merged = merged.sort_values("date").reset_index(drop=True)
+        merged = merged.sort_values(list(keys)).reset_index(drop=True)
         added, revised = int(is_new.sum()), int(changed.sum())
 
     merged["fetched_at"] = pd.to_datetime(merged["fetched_at"], utc=True)
-    rep.extend(validate_frame(merged, label=f"{name}/マージ後"))
+    rep.extend(validate_frame(merged, label=f"{name}/マージ後", keys=keys))
     if len(merged) < rows_before:
         rep.errors.append(f"{name}: 行数が減る ({rows_before} → {len(merged)})。蓄積を失うので中止")
     if not rep.ok:

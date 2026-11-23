@@ -1,0 +1,31 @@
+# よく使う国の組み合わせ（バスケット）。client.read(..., countries="central_america") で使う。
+# 国コードは ISO3（世界銀行の国一覧にあるもの）。世界銀行の地域・所得区分は
+# "region:LCN" / "income:LMC" の形でも指定できる（silver/countries.parquet から引く）。
+
+central_america:
+  title_ja: 中米 7 か国
+  countries: [BLZ, CRI, SLV, GTM, HND, NIC, PAN]
+
+sica:
+  title_ja: 中米統合機構（SICA）加盟国
+  countries: [BLZ, CRI, SLV, GTM, HND, NIC, PAN, DOM]
+
+caricom:
+  title_ja: カリブ共同体（CARICOM）加盟国
+  countries: [ATG, BHS, BRB, BLZ, DMA, GRD, GUY, HTI, JAM, KNA, LCA, VCT, SUR, TTO]
+
+latam_major:
+  title_ja: 中南米の主要国
+  countries: [ARG, BRA, CHL, COL, MEX, PER]
+
+asean:
+  title_ja: ASEAN 加盟国
+  countries: [BRN, KHM, IDN, LAO, MYS, MMR, PHL, SGP, THA, VNM]
+
+g7:
+  title_ja: G7
+  countries: [CAN, FRA, DEU, ITA, JPN, GBR, USA]
+
+g20:
+  title_ja: G20 の国（EU・アフリカ連合を除く）
+  countries: [ARG, AUS, BRA, CAN, CHN, FRA, DEU, IND, IDN, ITA, JPN, KOR, MEX, RUS, SAU, ZAF, TUR, GBR, USA]

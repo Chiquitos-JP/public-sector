@@ -4,6 +4,8 @@
 1. 作成元が公的機関として ``sources.yml`` の creators に載っている
 2. ライセンスが allowed_licenses にある
 3. ``used_by`` が空でない
+
+``country: ALL`` の系列はパネル（国をまたぐ。1 行は country / date で決まる）。
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ from psdata.paths import CATALOG_DIR
 
 TIERS = {"stocked", "on_demand"}
 FREQS = {"D", "W", "M", "Q", "A"}
+PANEL = "ALL"
 _WINDOW_RE = re.compile(r"^(\d+)([DWMY])$")
 
 
@@ -36,6 +39,18 @@ class Series:
     refetch_window: str
     start: str
     used_by: tuple[str, ...]
+    #: 作成元が他機関の統計を編集して載せている場合の原典（クレジットに添える）
+    original_source: str = ""
+    #: 取得の間隔（例: 7D）。空なら毎回取る。更新の少ない年次統計で CI の時間を節約する
+    fetch_every: str = ""
+
+    @property
+    def is_panel(self) -> bool:
+        return self.country == PANEL
+
+    @property
+    def keys(self) -> tuple[str, ...]:
+        return ("country", "date") if self.is_panel else ("date",)
 
     @property
     def code(self) -> str:
@@ -70,6 +85,31 @@ def load_series(catalog_dir: Path = CATALOG_DIR) -> list[Series]:
     return out
 
 
+def load_groups(catalog_dir: Path = CATALOG_DIR) -> dict[str, dict]:
+    """国の組み合わせ（catalog/groups.yml）。"""
+    f = catalog_dir / "groups.yml"
+    return (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
+
+
+def validate_groups(groups: dict[str, dict], known: set[str] | None = None) -> list[str]:
+    """国コードの形と重複を確かめる。``known`` があれば国一覧に無いコードも落とす。"""
+    errors = []
+    for name, g in groups.items():
+        codes = list((g or {}).get("countries") or [])
+        if not codes:
+            errors.append(f"グループ {name}: countries が空")
+        bad = [c for c in codes if not re.fullmatch(r"[A-Z]{3}", str(c))]
+        if bad:
+            errors.append(f"グループ {name}: ISO3 でないコード {bad}")
+        if len(set(codes)) != len(codes):
+            errors.append(f"グループ {name}: 国が重複している")
+        if known is not None:
+            missing = sorted(set(codes) - known - set(bad))
+            if missing:
+                errors.append(f"グループ {name}: 国一覧に無いコード {missing}")
+    return errors
+
+
 def validate(series: list[Series], sources: dict) -> list[str]:
     """収録基準と定義の整合を確かめ、違反を文字列で返す（空なら合格）。"""
     errors: list[str] = []
@@ -100,11 +140,14 @@ def validate(series: list[Series], sources: dict) -> list[str]:
         if s.freq not in FREQS:
             errors.append(f"{pre} freq {s.freq!r} は {sorted(FREQS)} のいずれか")
         if not re.fullmatch(r"[A-Z]{3}", s.country):
-            errors.append(f"{pre} country {s.country!r} は ISO3 の大文字 3 文字")
-        try:
-            parse_window(s.refetch_window)
-        except ValueError as e:
-            errors.append(f"{pre} {e}")
+            errors.append(f"{pre} country {s.country!r} は ISO3 の大文字 3 文字（パネルは {PANEL}）")
+        for name, w in (("refetch_window", s.refetch_window), ("fetch_every", s.fetch_every)):
+            if name == "fetch_every" and not w:
+                continue
+            try:
+                parse_window(w)
+            except ValueError as e:
+                errors.append(f"{pre} {name}: {e}")
     return errors
 
 
@@ -125,7 +168,7 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "seasonal_adjustment": s.seasonal_adjustment,
                 "creator": c["name"],
                 "license": c["license"],
-                "credit": c["credit"],
+                "credit": c["credit"] + (f"（原典: {s.original_source}）" if s.original_source else ""),
                 "distributor": sources["distributors"][s.distributor]["name"],
                 "tier": s.tier,
             }

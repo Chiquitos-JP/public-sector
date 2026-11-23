@@ -22,5 +22,10 @@ def bronze_path(series_id: str) -> Path:
     return data_dir() / "bronze" / source / f"{series_id}.parquet"
 
 
+def reference_path(source: str, name: str) -> Path:
+    """配信元の参照表（国の一覧など）。系列ではないので改定ログは持たず、取るたびに置き換える。"""
+    return data_dir() / "bronze" / source / f"_{name}.parquet"
+
+
 def silver_dir() -> Path:
     return data_dir() / "silver"

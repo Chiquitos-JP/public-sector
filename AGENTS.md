@@ -16,6 +16,7 @@
 ```
 catalog/sources.yml        作成元・ライセンス・クレジット・配信元
 catalog/series/*.yml       系列の定義
+catalog/groups.yml         よく使う国の組み合わせ（中米・CARICOM・G7 など）
 src/psdata/                catalog / store / sources / pipeline / client
 scripts/fetch.py           常備系列の取得（--full で全期間取り直し）
 scripts/validate.py        カタログとストアの検証（再取得しない）
@@ -26,16 +27,21 @@ data/                      git に入れない
 
 - `raw/<配信元>/<コード>/<時刻>.*` — 応答そのまま。変更しない
 - `bronze/<配信元>/<id>.parquet` — `date / value / fetched_at`。改定ログ `*.revisions.parquet`、取得記録 `*.provenance.json`
-- `silver/observations.parquet` — `series_id / country / date / value / fetched_at`
+- `silver/observations.parquet` — 単一の国の系列。`series_id / country / date / value / fetched_at`（1 行は `series_id / date`）
+- `silver/panel.parquet` — 国をまたぐ系列（`country: ALL`）。列は同じで、1 行は `series_id / country / date`
 - `silver/series.parquet` — カタログ（クレジット・ライセンス）
+- `silver/countries.parquet` — 国・地域の一覧（世界銀行の地域・所得区分・集計値かどうか）
 
 系列 id は `<配信元>.<元のコード>`。`country` は ISO3、`date` は期間の開始日。
+パネルの bronze は `country / date / value / fetched_at`。国の一覧（`bronze/<配信元>/_countries.parquet`）は系列ではないので取るたびに置き換える。
+`fetch_every` のある系列は、前回の取得から間隔が空いたときだけ取る（年次統計で CI の時間を節約する）。
 `refetch_window` の間は毎回取り直し、値が変われば上書きして改定ログに残す。取り直しで返らなかった日は消さない。
 
 `fetched_at` は**その値を最後に書き換えた時刻**（UTC）。値が変わらない行は最初に取得した時刻のまま進まない。
 取得が動いているかの判定には使わず、系列ごとの最終 `date` で判定する。
 
 **利用側との契約**: `silver/observations.parquet` の列名・意味と系列 id は、変える前に利用側へ知らせる。
+国をまたぐ系列は `observations.parquet` に混ぜない（利用側は `series_id / date` が重ならない前提で読む）。
 
 ## 系列の追加
 
@@ -67,7 +73,11 @@ python3 -m venv .venv-mac && .venv-mac/bin/python3 -m pip install -e '.[dev]'
 from psdata import client
 client.read("fred.UNRATE")
 client.read(["fred.CPIAUCSL", "boj.FM08.FXERD04"], start="2020-01-01")
+client.read("wb.NY.GDP.MKTP.KD.ZG", countries="central_america")          # groups.yml の名前
+client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])  # ISO3・世界銀行の区分を混ぜてよい
 client.catalog()
+client.countries()
+client.groups()
 ```
 
 ## 規約
