@@ -13,6 +13,8 @@
     client.search("school enrollment")                            # 取得元の指標を探す（世界銀行。FRED は API キーがあれば）
     client.pull("wb.SE.PRM.ENRR")                                 # カタログに無い系列をその場で取る（手元にだけ置く）
     print(client.draft("wb.SE.PRM.ENRR"))                         # 常備に上げるときのカタログの下書き
+    df = client.extract(["wb.NY.GDP.MKTP.KD.ZG"], countries="central_america", measures=["value"])  # 目的に合わせた tidy な表
+    client.export(df, "out/macro.xlsx")                           # データカード（出典・定義・前提）付きで書き出す
     client.profile()                                              # 系列ごとの特徴（期間・欠け・値域・変化幅・遅れ・改定・鮮度）
     client.manifest()                                             # silver を作った時刻・コードの版・件数
 
@@ -197,3 +199,60 @@ def _read_as_of(series_id, ids, panel, countries, start, end, as_of) -> pd.DataF
     if isinstance(series_id, str) and not panel:
         return df[["date", "value"]]
     return df[["series_id", "country", "date", "value"]]
+
+
+def extract(
+    series_id: str | list[str],
+    *,
+    countries: str | list[str] | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    as_of: str | pd.Timestamp | None = None,
+    measures: list[str] | tuple[str, ...] = ("value",),
+    dropna: bool = True,
+) -> pd.DataFrame:
+    """目的に合わせて切り出した tidy な表（1 行 = 1 観測）。列と measure の定義は ``psdata.extract``。
+
+    前年比などは期間を絞る前の全履歴から計算するので、``start`` の最初の年も前年比が出る。
+    """
+    from psdata import extract as _extract
+
+    ids = [series_id] if isinstance(series_id, str) else list(series_id)
+    # 前年比・前期比のために 1 年分さかのぼって読み、計算したあとで期間を絞る
+    need_base = any(m != "value" for m in measures)
+    read_start = (pd.Timestamp(start) - pd.DateOffset(years=1, days=7)).date().isoformat() if start and need_base else start
+    obs = read(ids, countries=countries, start=read_start, end=end, as_of=as_of)
+    if "series_id" not in obs.columns:  # 単一の系列は date / value だけで返るので揃える
+        row = catalog().set_index("series_id").loc[ids[0]]
+        obs = obs.assign(series_id=ids[0], country=row["country"])
+    path = silver_dir() / "countries.parquet"
+    df = _extract.tidy(obs, catalog(), pd.read_parquet(path) if path.is_file() else None, list(measures), dropna)
+    if start:
+        df = df[df["date"] >= pd.Timestamp(start)].reset_index(drop=True)
+    df.attrs["query"] = {
+        "series": ids, "countries": countries, "start": start, "end": end,
+        "as_of": None if as_of is None else str(as_of), "measures": list(measures),
+    }
+    return df
+
+
+def to_wide(df: pd.DataFrame, columns: str = "series_id") -> pd.DataFrame:
+    """extract の表を横持ちにする（表やグラフ用）。"""
+    from psdata import extract as _extract
+
+    return _extract.to_wide(df, columns)
+
+
+def export(df: pd.DataFrame, path: str, query: dict | None = None) -> list[str]:
+    """extract の表を、データカード（出典・クレジット・ライセンス・定義・前提・鮮度・条件）付きで書き出す。
+
+    拡張子で形式を選ぶ: .xlsx（data と card のシート）/ .csv（Excel で開ける）/ .parquet。
+    どの形式でも ``<名前>.card.md`` と ``<名前>.card.json`` を隣に置く。書いたファイルのパスを返す。
+    """
+    from psdata import extract as _extract
+
+    q = query or df.attrs.get("query") or {"series": sorted(df["series_id"].unique())}
+    path_prof = silver_dir() / "profile.parquet"
+    prof = pd.read_parquet(path_prof) if path_prof.is_file() else None
+    c = _extract.card(df, catalog(), prof, q)
+    return [str(p) for p in _extract.write(df, path, c)]

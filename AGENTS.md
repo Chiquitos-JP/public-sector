@@ -66,6 +66,20 @@ data/                      git に入れない
 取り置きの段階では収録基準を確かめていない（FRED には再配布できない系列が混ざる）。
 **常備に上げる基準**: 2 回以上の作業で使う・CI や別のプロジェクトから読む・改定を追いたい、のどれかに当たり、収録基準を満たすもの。上げたら下の「系列の追加」に従う。
 
+## 目的に合わせて切り出す（アドホックな利用）
+
+```python
+df = client.extract(["wb.NY.GDP.MKTP.KD.ZG", "wb.FP.CPI.TOTL.ZG"], countries="central_america",
+                    start="2015-01-01", measures=["value", "yoy_diff"])   # tidy: 1 行 = 1 観測
+client.export(df, "exports/20261123-ca/data.xlsx")   # .xlsx / .csv / .parquet ＋ .card.md / .card.json
+client.to_wide(df, columns="country")                 # 横持ち（表・グラフ用）
+```
+
+- 列: `series_id / title_ja / country / country_name / date / period / measure / value / unit`
+- `measure`: `value` / `yoy_pct` / `yoy_diff` / `pop_pct` / `pop_diff`（定義は `src/psdata/extract.py`。基準は観測日で今日ではない。前の値が無ければ空で、0 で埋めない）
+- データカードに出典・クレジット・ライセンス・定義・前提・鮮度・切り出しの条件が入る。外で使うときは `credits` を出典として書く
+- AI に目的を伝えて資料（pptx・HTML・グラフ）まで作るときの手順はスキル `skills/psdata-adhoc/SKILL.md`（`~/.claude/skills/psdata-adhoc` にリンクして使う）
+
 ## 実行（Mac は `.venv-mac/` と `python3`、Windows は `.venv/` と `py`）
 
 ```bash
