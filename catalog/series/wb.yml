@@ -5,6 +5,11 @@
 - id: wb.NY.GDP.MKTP.KD.ZG
   title_ja: 実質 GDP 成長率
   title_en: "GDP growth (annual %)"
+  definition: "実質 GDP の前年比の伸び率。物価の変動を除いた（2015 年基準の米ドル建て不変価格）経済規模の成長率"
+  notes:
+    - "各国の統計機関・中央銀行の国民経済計算がもとで、国によって基準年の改定や推計方法が違う"
+    - "暦年と会計年度のどちらで集計しているかは国によって違う"
+  source_url: https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG
   creator: worldbank
   distributor: wb
   country: ALL
@@ -22,6 +27,11 @@
 - id: wb.NY.GDP.PCAP.CD
   title_ja: 1 人当たり GDP（名目・米ドル）
   title_en: "GDP per capita (current US$)"
+  definition: "1 人当たり GDP（名目・米ドル建て）。名目 GDP を年央の人口で割った値"
+  notes:
+    - "物価も為替も調整していない。自国通貨が対ドルで下がると、経済が変わらなくても値が下がる"
+    - "生活水準の比較には購買力平価（PPP）建てのほうが向く（ここには入れていない）"
+  source_url: https://data.worldbank.org/indicator/NY.GDP.PCAP.CD
   creator: worldbank
   distributor: wb
   country: ALL
@@ -39,6 +49,11 @@
 - id: wb.NY.GDP.MKTP.CD
   title_ja: 名目 GDP（米ドル）
   title_en: "GDP (current US$)"
+  definition: "名目 GDP（米ドル建て）。各国通貨の GDP をその年の為替相場で米ドルに換算した値"
+  notes:
+    - "物価も為替も調整していない。年ごとの増減には為替の動きが大きく入る"
+    - "経済規模の比較（どの国が大きいか）に向く。成長の比較には実質の成長率を使う"
+  source_url: https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
   creator: worldbank
   distributor: wb
   country: ALL
@@ -56,6 +71,12 @@
 - id: wb.FP.CPI.TOTL.ZG
   title_ja: 消費者物価上昇率
   title_en: "Inflation, consumer prices (annual %)"
+  definition: "消費者物価の前年比の上昇率（年平均）"
+  notes:
+    - "原典は IMF の International Financial Statistics。品目のかごや基準年は国ごとに違う"
+    - "年平均どうしの比較なので、年末時点の上昇率（前年 12 月比）とは違う"
+    - "ハイパーインフレの国は値が桁違いに大きくなるので、グラフでは軸の扱いに注意"
+  source_url: https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG
   creator: worldbank
   distributor: wb
   country: ALL
@@ -74,6 +95,11 @@
 - id: wb.GC.NLD.TOTL.GD.ZS
   title_ja: 財政収支（純貸出・純借入、GDP 比）
   title_en: "Net lending (+) / net borrowing (-) (% of GDP)"
+  definition: "政府の財政収支（純貸出 / 純借入）の GDP 比。歳入 − 歳出 − 非金融資産への純投資。プラスが黒字、マイナスが赤字"
+  notes:
+    - "原典は IMF の Government Finance Statistics。対象は主に中央政府で、国によって地方政府を含むかが違う（一般政府の比較なら IMF WEO のほうがそろっている）"
+    - "公表が遅く、最新は 2 年ほど前の年になる。収録している国も少ない"
+  source_url: https://data.worldbank.org/indicator/GC.NLD.TOTL.GD.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -92,6 +118,12 @@
 - id: wb.GC.REV.XGRT.GD.ZS
   title_ja: 歳入（贈与を除く、GDP 比）
   title_en: "Revenue, excluding grants (% of GDP)"
+  definition: "政府の歳入（外国などからの贈与を除く）の GDP 比。税収・社会保険料・その他の収入の合計"
+  notes:
+    - "原典は IMF の Government Finance Statistics。主に中央政府で、国によって範囲が違う"
+    - "贈与（援助）を除くので、援助に頼る国では政府の実際の収入より小さく出る"
+    - "公表が遅く、最新は 2 年ほど前の年になる"
+  source_url: https://data.worldbank.org/indicator/GC.REV.XGRT.GD.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -110,6 +142,12 @@
 - id: wb.GC.DOD.TOTL.GD.ZS
   title_ja: 中央政府債務（GDP 比）
   title_en: "Central government debt, total (% of GDP)"
+  definition: "中央政府の債務残高の GDP 比（総額。国内・対外の両方）"
+  notes:
+    - "原典は IMF の Government Finance Statistics。中央政府だけで、地方政府や公的企業の債務は含まない"
+    - "残高なので、通常は会計年度末の時点の値"
+    - "収録している国がかなり少なく、公表も 2 年ほど遅れる（各国比較なら IMF WEO の一般政府債務のほうが網羅的）"
+  source_url: https://data.worldbank.org/indicator/GC.DOD.TOTL.GD.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -128,6 +166,11 @@
 - id: wb.BN.CAB.XOKA.GD.ZS
   title_ja: 経常収支（GDP 比）
   title_en: "Current account balance (% of GDP)"
+  definition: "経常収支の GDP 比。財・サービスの貿易、所得の受け払い、送金などの移転の合計。プラスが黒字"
+  notes:
+    - "原典は IMF の国際収支統計（BPM6）"
+    - "送金の受け取りが多い国では、貿易赤字が大きくても経常収支は小さな赤字にとどまることがある"
+  source_url: https://data.worldbank.org/indicator/BN.CAB.XOKA.GD.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -146,6 +189,11 @@
 - id: wb.BX.TRF.PWKR.DT.GD.ZS
   title_ja: 個人送金の受け取り（GDP 比）
   title_en: "Personal remittances, received (% of GDP)"
+  definition: "海外からの個人送金の受け取りの GDP 比。海外で働く家族からの仕送りと、国外で短期に働く人の給与の合計"
+  notes:
+    - "IMF の国際収支統計をもとにした世界銀行の推計"
+    - "正規の経路を通った送金だけ。非公式の経路（手渡し・非正規業者）の分は入らず、実態より小さく出やすい"
+  source_url: https://data.worldbank.org/indicator/BX.TRF.PWKR.DT.GD.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -164,6 +212,11 @@
 - id: wb.DT.DOD.DECT.GN.ZS
   title_ja: 対外債務残高（GNI 比）
   title_en: "External debt stocks (% of GNI)"
+  definition: "対外債務残高の GNI（国民総所得）比。公的・民間の長期債務、IMF からの借入、短期債務の合計"
+  notes:
+    - "原典は世界銀行の International Debt Statistics。低・中所得国だけが対象で、高所得国は値が無い"
+    - "分母は GDP ではなく GNI（海外からの所得の受け払いを含む）"
+  source_url: https://data.worldbank.org/indicator/DT.DOD.DECT.GN.ZS
   creator: worldbank
   distributor: wb
   country: ALL
@@ -182,6 +235,10 @@
 - id: wb.SP.POP.TOTL
   title_ja: 総人口
   title_en: "Population, total"
+  definition: "総人口（年央の推計値）。国籍や在留資格にかかわらず、その国に住む人をすべて数える"
+  notes:
+    - "原典は国連の World Population Prospects。国勢調査の間の年は推計で、新しい版が出ると過去にさかのぼって改定される"
+  source_url: https://data.worldbank.org/indicator/SP.POP.TOTL
   creator: worldbank
   distributor: wb
   country: ALL
@@ -200,6 +257,12 @@
 - id: wb.SI.POV.DDAY
   title_ja: 貧困率（1 日 3.00 ドル未満・2021 年 PPP）
   title_en: "Poverty headcount ratio at $3.00 a day (2021 PPP) (% of population)"
+  definition: "1 日 3.00 ドル未満（2021 年の購買力平価）で暮らす人の割合。世界銀行の国際貧困ライン"
+  notes:
+    - "家計調査がもとなので、調査のあった年しか値が無い（国によっては数年おき）"
+    - "購買力平価の改定で貧困ラインが変わると過去の値も変わり、以前の版の値とは比べられない"
+    - "所得で測る国と消費で測る国があり、国どうしの比較は目安"
+  source_url: https://data.worldbank.org/indicator/SI.POV.DDAY
   creator: worldbank
   distributor: wb
   country: ALL
@@ -218,6 +281,11 @@
 - id: wb.SL.UEM.TOTL.ZS
   title_ja: 失業率（ILO 推計）
   title_en: "Unemployment, total (% of total labor force) (modeled ILO estimate)"
+  definition: "失業率（労働力人口に占める失業者の割合）。ILO が各国の統計をそろえて推計した値"
+  notes:
+    - "ILO のモデル推計なので、各国の公式の失業率とは一致しないことがある（調査の無い年も推計で埋まっている）"
+    - "インフォーマル就業の多い国では、失業率が低くても雇用の質が良いとは限らない"
+  source_url: https://data.worldbank.org/indicator/SL.UEM.TOTL.ZS
   creator: worldbank
   distributor: wb
   country: ALL

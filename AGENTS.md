@@ -46,7 +46,7 @@ data/                      git に入れない
 ## 系列の追加
 
 1. 作成元が `catalog/sources.yml` に無ければ追加する
-2. `catalog/series/<配信元>.yml` に定義を書く
+2. `catalog/series/<配信元>.yml` に定義を書く。`definition`（何を測っているか）・`notes`（季節調整・欠けている期間・定義の変更・比べるときの注意など読むときの前提）・`source_url`（公式の定義のページ）は必須
 3. 新しい配信元は `src/psdata/sources/<配信元>.py` に `fetch(series, start)` を書き、`FETCHERS` に登録する
 4. `scripts/validate.py` と `pytest` を通す
 
@@ -78,6 +78,7 @@ client.read("wb.FP.CPI.TOTL.ZG", countries=["GTM", "MEX", "region:LCN"])  # ISO3
 client.catalog()
 client.countries()
 client.groups()
+print(client.describe("wb.FP.CPI.TOTL.ZG"))  # 何を測っているか・前提・出典
 ```
 
 ## 規約

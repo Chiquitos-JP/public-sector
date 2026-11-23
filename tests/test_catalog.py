@@ -53,3 +53,9 @@ def test_parse_window_rejects_garbage():
 def test_series_table_carries_credit(series, sources):
     t = catalog.series_table(series, sources)
     assert t["credit"].notna().all() and t["license"].notna().all()
+
+
+def test_missing_definition_or_source_url_is_rejected(series, sources):
+    bad = [replace(series[0], definition=""), replace(series[1], id=series[1].id + "X", source_url="")]
+    errors = catalog.validate(bad, sources)
+    assert any("definition" in e for e in errors) and any("source_url" in e for e in errors)

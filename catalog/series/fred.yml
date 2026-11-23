@@ -3,6 +3,12 @@
 - id: fred.FEDFUNDS
   title_ja: 米フェデラルファンド実効金利（月平均）
   title_en: Federal Funds Effective Rate
+  definition: "米国の銀行どうしが翌日物で資金を貸し借りする金利（実効 FF 金利）の月平均。FRB の政策金利の誘導目標の結果として決まる実勢の金利"
+  notes:
+    - "日次の実効 FF 金利（ニューヨーク連銀が取引量加重の中央値で算出）を月で平均した値。月中に利上げ・利下げがあると、新旧の金利の中間の値になる"
+    - "誘導目標（レンジ）そのものではない。2008-12〜2015-12 と 2020-03〜2022-03 は目標が 0〜0.25% で、値は 0.1% 前後に張り付く"
+    - "日付は月の初日（その月の平均）"
+  source_url: https://fred.stlouisfed.org/series/FEDFUNDS
   creator: frb
   distributor: fred
   country: USA
@@ -18,6 +24,13 @@
 - id: fred.UNRATE
   title_ja: 米失業率
   title_en: Unemployment Rate
+  definition: "米国の失業率。16 歳以上の民間人の労働力人口に占める失業者の割合（家計調査 CPS による）"
+  notes:
+    - "季節調整済み。季節調整の係数は毎年 1 月に直近 5 年分が見直されるので、過去の値も変わる（取り直しの窓は 5 年）"
+    - "2025-10 は政府閉鎖で調査が行われず、値が無い（欠けたまま。補っていない）"
+    - "失業者は「仕事が無く、探していて、すぐ働ける人」。求職をあきらめた人は含まない"
+    - "日付は月の初日（その月の調査）"
+  source_url: https://fred.stlouisfed.org/series/UNRATE
   creator: bls
   distributor: fred
   country: USA
@@ -33,6 +46,13 @@
 - id: fred.CPIAUCSL
   title_ja: 米消費者物価指数（全都市・全品目）
   title_en: Consumer Price Index for All Urban Consumers, All Items
+  definition: "米国の消費者物価指数（都市部の全消費者 CPI-U・総合）。1982〜84 年の平均を 100 とする指数"
+  notes:
+    - "指数の水準であって上昇率ではない。前年比は利用側で計算する"
+    - "季節調整済み。季節調整の係数は毎年 2 月に直近 5 年分が見直される（取り直しの窓は 5 年）"
+    - "2025-10 は政府閉鎖で調査が行われず、値が無い（欠けたまま）"
+    - "日付は月の初日（その月の平均物価）"
+  source_url: https://fred.stlouisfed.org/series/CPIAUCSL
   creator: bls
   distributor: fred
   country: USA
@@ -48,6 +68,12 @@
 - id: fred.M2SL
   title_ja: 米マネーサプライ M2
   title_en: M2
+  definition: "米国のマネーストック M2（現金・要求払い預金・貯蓄預金・小口定期・個人向け MMF）の残高。単位は 10 億ドル"
+  notes:
+    - "季節調整済みの月平均の残高。年次の基準改定などで過去の値が改定される（2021-04〜2026-07 の 64 か月が後から改定された例がある）"
+    - "2020-05 の定義変更（貯蓄預金の扱い）で M1 は不連続になったが、M2 はもともと貯蓄預金を含むので連続している"
+    - "日付は月の初日"
+  source_url: https://fred.stlouisfed.org/series/M2SL
   creator: frb
   distributor: fred
   country: USA
@@ -63,6 +89,11 @@
 - id: fred.WALCL
   title_ja: FRB 総資産（水曜時点）
   title_en: "Assets: Total Assets: Wednesday Level"
+  definition: "FRB（連邦準備制度）の総資産。単位は 100 万ドル。量的緩和・引き締めの規模を見る"
+  notes:
+    - "週次の水曜日時点の残高（H.4.1）。日付はその水曜日"
+    - "季節調整なし。決算日などの一時的な変動もそのまま入る"
+  source_url: https://fred.stlouisfed.org/series/WALCL
   creator: frb
   distributor: fred
   country: USA
@@ -78,6 +109,11 @@
 - id: fred.DGS10
   title_ja: 米 10 年国債利回り（コンスタント・マチュリティ）
   title_en: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
+  definition: "米国債 10 年の利回り（コンスタント・マチュリティ。実際の国債の利回り曲線から 10 年ちょうどの点を求めた値）"
+  notes:
+    - "米国の営業日だけ。祝日は行が無い"
+    - "単位は年率 %。日付はその営業日の終値ベース"
+  source_url: https://fred.stlouisfed.org/series/DGS10
   creator: frb
   distributor: fred
   country: USA
@@ -93,6 +129,11 @@
 - id: fred.DEXJPUS
   title_ja: 円/ドル為替レート（NY 正午）
   title_en: Japanese Yen to U.S. Dollar Spot Exchange Rate
+  definition: "ドル円の為替相場。1 ドルあたりの円（ニューヨーク市場の正午の買い相場、FRB H.10）"
+  notes:
+    - "米国の営業日だけ。公表は週 1 回まとめて（翌週の月曜）なので、最新の値は数日遅れる"
+    - "日銀の東京 17 時の相場（boj.FM08.FXERD04）とは時点が違うので、同じ日でも値がずれる"
+  source_url: https://fred.stlouisfed.org/series/DEXJPUS
   creator: frb
   distributor: fred
   country: JPN

@@ -39,6 +39,12 @@ class Series:
     refetch_window: str
     start: str
     used_by: tuple[str, ...]
+    #: 何を測っているか（1〜2 文）
+    definition: str = ""
+    #: 読むときの大切な前提（季節調整・欠けている期間・定義の変更・比べるときの注意など）
+    notes: tuple[str, ...] = ()
+    #: 定義を確かめられる公式のページ
+    source_url: str = ""
     #: 作成元が他機関の統計を編集して載せている場合の原典（クレジットに添える）
     original_source: str = ""
     #: 取得の間隔（例: 7D）。空なら毎回取る。更新の少ない年次統計で CI の時間を節約する
@@ -81,6 +87,7 @@ def load_series(catalog_dir: Path = CATALOG_DIR) -> list[Series]:
         for entry in yaml.safe_load(f.read_text(encoding="utf-8")) or []:
             entry = dict(entry)
             entry["used_by"] = tuple(entry.get("used_by") or ())
+            entry["notes"] = tuple(entry.get("notes") or ())
             out.append(Series(**entry))
     return out
 
@@ -135,6 +142,10 @@ def validate(series: list[Series], sources: dict) -> list[str]:
             errors.append(f"{pre} 配信元 {s.distributor!r} が sources.yml の distributors に無い")
         if not s.used_by:
             errors.append(f"{pre} used_by が空（基準 3: 利用先の無い系列は持たない）")
+        if not s.definition.strip():
+            errors.append(f"{pre} definition が空（何を測っているかを書く）")
+        if not s.source_url.startswith("https://"):
+            errors.append(f"{pre} source_url が無い（定義を確かめられる公式のページ）")
         if s.tier not in TIERS:
             errors.append(f"{pre} tier {s.tier!r} は {sorted(TIERS)} のいずれか")
         if s.freq not in FREQS:
@@ -162,6 +173,8 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "series_id": s.id,
                 "title_ja": s.title_ja,
                 "title_en": s.title_en,
+                "definition": s.definition,
+                "notes": "\n".join(s.notes),
                 "country": s.country,
                 "freq": s.freq,
                 "unit": s.unit,
@@ -170,6 +183,7 @@ def series_table(series: list[Series], sources: dict) -> pd.DataFrame:
                 "license": c["license"],
                 "credit": c["credit"] + (f"（原典: {s.original_source}）" if s.original_source else ""),
                 "distributor": sources["distributors"][s.distributor]["name"],
+                "source_url": s.source_url,
                 "tier": s.tier,
             }
         )

@@ -8,6 +8,7 @@
     client.catalog()                                              # 系列の定義・クレジット・ライセンス
     client.countries()                                            # 国・地域の一覧（地域・所得区分）
     client.groups()                                               # 名前付きの国の組み合わせ
+    print(client.describe("wb.FP.CPI.TOTL.ZG"))                   # 何を測っているか・前提・出典
 
 ``countries`` には ISO3 のリスト、catalog/groups.yml のグループ名、
 世界銀行の区分（``region:LCN`` / ``income:LMC`` など）を混ぜて渡せる。
@@ -23,6 +24,27 @@ from psdata.paths import silver_dir
 
 def catalog() -> pd.DataFrame:
     return pd.read_parquet(silver_dir() / "series.parquet")
+
+
+def describe(series_id: str) -> str:
+    """系列の説明（何を測っているか・読むときの前提・出典）を読みやすい文にする。"""
+    cat = catalog().set_index("series_id")
+    if series_id not in cat.index:
+        raise KeyError(f"カタログに無い系列: {series_id}")
+    r = cat.loc[series_id]
+    where = "全ての国・地域（countries で選ぶ）" if r["country"] == _catalog.PANEL else r["country"]
+    lines = [
+        f"{series_id}  {r['title_ja']}",
+        f"  {r['title_en']}",
+        "",
+        r["definition"],
+        "",
+        f"単位: {r['unit']} / 頻度: {r['freq']} / 季節調整: {r['seasonal_adjustment']} / 国: {where}",
+    ]
+    if r["notes"]:
+        lines += ["", "前提:"] + [f"  - {n}" for n in r["notes"].split("\n")]
+    lines += ["", f"出典: {r['credit']}", f"ライセンス: {r['license']}", f"定義: {r['source_url']}"]
+    return "\n".join(lines)
 
 
 def countries() -> pd.DataFrame:
