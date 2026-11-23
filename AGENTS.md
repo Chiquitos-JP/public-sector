@@ -105,7 +105,7 @@ python3 -m venv .venv-mac && .venv-mac/bin/python3 -m pip install -e '.[dev]'
 .venv-mac/bin/python3 -m pytest
 ```
 
-環境変数: `FRED_API_KEY`（任意）、`PSDATA_DIR`（データの場所。既定は `data/`）、`PSDATA_R2_KEY_ID` / `PSDATA_R2_SECRET` / `PSDATA_R2_ENDPOINT`（任意。`client.sql(source="r2")` 用）
+環境変数: `FRED_API_KEY`（任意。FRED の公式 API と検索）・`ESTAT_APP_ID`（e-Stat）。Mac ではキーチェーンのサービス `psdata-fred-api-key` / `psdata-estat-app-id` からも読む（`src/psdata/secrets.py`）。CI は GitHub Secrets の同じ名前。`PSDATA_DIR`（データの場所。既定は `data/`）、`PSDATA_R2_KEY_ID` / `PSDATA_R2_SECRET` / `PSDATA_R2_ENDPOINT`（任意。`client.sql(source="r2")` 用）
 
 ## 保存先と定期取得
 

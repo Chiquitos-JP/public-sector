@@ -1,14 +1,14 @@
 """FRED（セントルイス連銀）からの取得。
 
-``FRED_API_KEY`` があれば公式 API、無ければ公開 CSV を使う。どちらも開始日を指定できる。
+``FRED_API_KEY``（環境変数か Mac のキーチェーン）があれば公式 API、無ければ公開 CSV を使う。どちらも開始日を指定できる。
 """
 from __future__ import annotations
 
 import io
-import os
 
 import pandas as pd
 
+from psdata import secrets
 from psdata.catalog import Series
 from psdata.sources._http import get, save_raw
 
@@ -38,7 +38,7 @@ def _clean(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def fetch(series: Series, start: str) -> tuple[pd.DataFrame, dict]:
-    key = os.environ.get("FRED_API_KEY", "").strip()
+    key = secrets.get("FRED_API_KEY")
     if key:
         resp = get(API_URL, {"series_id": series.code, "api_key": key, "file_type": "json", "observation_start": start})
         save_raw("fred", series.code, resp.text, "json")
@@ -53,7 +53,7 @@ SEARCH_URL = "https://api.stlouisfed.org/fred/series/search"
 
 def search(text: str, limit: int = 50) -> pd.DataFrame:
     """FRED の系列を探す（``FRED_API_KEY`` が要る）。著作権つきの系列も混ざるので、使う前に notes を確かめる。"""
-    key = os.environ.get("FRED_API_KEY", "").strip()
+    key = secrets.get("FRED_API_KEY")
     if not key:
         raise RuntimeError("FRED の検索には FRED_API_KEY が要る（https://fred.stlouisfed.org/docs/api/api_key.html で無料で取れる）")
     resp = get(SEARCH_URL, {"search_text": text, "api_key": key, "file_type": "json", "limit": limit, "order_by": "popularity"})

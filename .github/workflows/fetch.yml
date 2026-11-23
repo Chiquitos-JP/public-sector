@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 45
     env:
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      ESTAT_APP_ID: ${{ secrets.ESTAT_APP_ID }}  # e-Stat の系列を足したときに使う
       RCLONE_CONFIG_PS_TYPE: s3
       RCLONE_CONFIG_PS_PROVIDER: Cloudflare
       RCLONE_CONFIG_PS_ACCESS_KEY_ID: ${{ secrets.PS_R2_ACCESS_KEY_ID }}
