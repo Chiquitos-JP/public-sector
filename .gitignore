@@ -1,6 +1,4 @@
-# Quarto output
 _site/
-.quarto/
 
 # Data (正本は R2。git には入れない)
 data/
@@ -43,5 +41,4 @@ Thumbs.db
 *.temp
 ~$*
 
-/.quarto/
-**/*.quarto_ipynb
+/
