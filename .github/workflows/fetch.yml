@@ -1,6 +1,6 @@
 # 常備系列の定期取得。R2（public-sector-data）に書くのはこのワークフローだけ。
 #
-# 流れ: R2 から bronze を取り込む → 取り直し（改定対応）→ silver 再構築 → 検証 → R2 へ書く
+# 流れ: R2 から bronze を取り込む → 取り直し（改定対応）→ silver 再構築 → 検証 → R2 へ書く → 古い raw を消す
 # 1 系列の取得に失敗しても、検証を通った他の系列は書く。そのうえでジョブは失敗にする。
 name: fetch
 
@@ -37,6 +37,8 @@ jobs:
       RCLONE_CONFIG_PS_NO_CHECK_BUCKET: "true"
       RCLONE_CONFIG_PS_ACL: private
       REMOTE: ps:public-sector-data
+      # raw（応答そのまま）の保存日数。過ぎたものは消す。bronze・silver・logs は消さない
+      RAW_KEEP_DAYS: "90"
     steps:
       - uses: actions/checkout@v7
 
@@ -83,6 +85,9 @@ jobs:
           for layer in raw bronze silver; do
             rclone copy "data/$layer" "$REMOTE/$layer" --transfers 8
           done
+
+      - name: Prune old raw
+        run: rclone delete "$REMOTE/raw" --min-age "${RAW_KEEP_DAYS}d"
 
       - name: Push logs to R2
         if: always()

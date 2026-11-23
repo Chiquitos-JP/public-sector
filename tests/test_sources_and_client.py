@@ -42,3 +42,16 @@ def test_pipeline_and_client_roundtrip(tmp_path, monkeypatch):
     assert set(many["country"]) == {"USA", "JPN"} and len(many) == 4
     with pytest.raises(KeyError):
         client.read("fred.SP500")
+
+
+def test_raw_is_saved_gzipped_and_unchanged(tmp_path, monkeypatch):
+    import gzip
+
+    from psdata.sources._http import save_raw
+
+    monkeypatch.setenv("PSDATA_DIR", str(tmp_path))
+    body = '{"a": "日本語", "v": [1, 2, 3]}' * 100
+    path = save_raw("wb", "NY.GDP", body, "p1.json")
+    assert path.name.endswith(".p1.json.gz") and path.parent == tmp_path / "raw" / "wb" / "NY.GDP"
+    assert gzip.decompress(path.read_bytes()).decode("utf-8") == body
+    assert path.stat().st_size < len(body.encode("utf-8"))

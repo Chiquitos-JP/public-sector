@@ -25,7 +25,7 @@ data/                      git に入れない
 
 ## データの層
 
-- `raw/<配信元>/<コード>/<時刻>.*` — 応答そのまま。変更しない
+- `raw/<配信元>/<コード>/<時刻>.<拡張子>.gz` — 応答そのまま（gzip）。変更しない。保存先では 90 日を過ぎたら CI が消す
 - `bronze/<配信元>/<id>.parquet` — `date / value / fetched_at`。改定ログ `*.revisions.parquet`、取得記録 `*.provenance.json`
 - `silver/observations.parquet` — 単一の国の系列。`series_id / country / date / value / fetched_at`（1 行は `series_id / date`）
 - `silver/panel.parquet` — 国をまたぐ系列（`country: ALL`）。列は同じで、1 行は `series_id / country / date`
